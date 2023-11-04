@@ -4,10 +4,13 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.util.Base64
 import android.util.Patterns
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.compose.runtime.Composable
+import androidx.core.view.WindowCompat
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -62,4 +65,7 @@ fun String?.notNullString(): String {
         this
     }
 }
+
+
+
 

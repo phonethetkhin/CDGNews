@@ -1,24 +1,32 @@
 package com.ptk.ptk_news.ui.ui_resource.navigation
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.ptk.ptk_news.ui.screen.ArticleListScreen
-import com.ptk.ptk_news.ui.screen.HeadLinesScreen
+import com.ptk.ptk_news.ui.screen.ArticlesScreen
+import com.ptk.ptk_news.ui.screen.NewsFeedScreen
 import com.ptk.ptk_news.ui.screen.ProfileScreen
 import com.ptk.ptk_news.ui.screen.SettingScreen
 
 @Composable
 fun NavGraph(
+    scaffoldPaddingValue: Float,
     navController: NavHostController,
 ) {
-    NavHost(navController = navController, startDestination = Routes.ArticleListScreen.route) {
-        composable(route = Routes.ArticleListScreen.route) {
-            ArticleListScreen(navController)
+    NavHost(
+        modifier = Modifier.padding(bottom =scaffoldPaddingValue.dp),
+        navController = navController,
+        startDestination = Routes.ProfileScreen.route
+    ) {
+        composable(route = Routes.NewsFeedScreen.route) {
+            NewsFeedScreen(navController)
         }
-        composable(route = Routes.HeadlinesScreen.route) {
-            HeadLinesScreen(navController)
+        composable(route = Routes.ArticlesScreen.route) {
+            ArticlesScreen(navController)
         }
         composable(route = Routes.SettingScreen.route) {
             SettingScreen(navController)
