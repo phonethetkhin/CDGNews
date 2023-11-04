@@ -47,7 +47,7 @@ import ir.kaaveh.sdpcompose.ssp
 
 //UIs
 @Composable
-fun ArticleListScreen(
+fun SettingScreen(
     navController: NavController,
     articleListViewModel: ArticleListViewModel = hiltViewModel(),
 
@@ -58,74 +58,21 @@ fun ArticleListScreen(
     LaunchedEffect(key1 = Unit) {
         articleListViewModel.getNewsFeed()
     }
-    ArticleListScreenContent(navController, uiStates.newsFeedList)
+    SettingScreenContent(navController, uiStates.newsFeedList)
 
 
 }
 
 @Composable
-fun ArticleListScreenContent(navController: NavController, articleList: List<ArticlesItem>) {
+fun SettingScreenContent(navController: NavController, articleList: List<ArticlesItem>) {
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxSize()
     ) {
-        Text(
-            "Articles",
-            fontSize = 16.ssp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color.Black)
-                .padding(vertical = 12.sdp),
-            color = Color.White,
-            textAlign = TextAlign.Center
-        )
-        ArticleList(articleList)
+        Text("Setting")
+
     }
-
-}
-
-@Composable
-fun ColumnScope.ArticleList(articleList: List<ArticlesItem>) {
-    LazyColumn(
-        modifier = Modifier
-            .weight(1F)
-            .padding(8.sdp)
-    ) {
-        items(articleList) {
-            ArticleListItem(it)
-            Divider()
-        }
-    }
-}
-
-@Composable
-fun ArticleListItem(article: ArticlesItem) {
-
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 8.sdp)) {
-            Spacer(modifier = Modifier.width(8.sdp))
-
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(article.urlToImage)
-                    .crossfade(true)
-                    .build(),
-                placeholder = painterResource(R.drawable.placeholder),
-                contentDescription = "ArticleImage",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(50.sdp)
-                    .clip(RoundedCornerShape(4.sdp))
-            )
-            Spacer(modifier = Modifier.width(8.sdp))
-            Text(
-                text = article.title ?: "-",
-                fontSize = 11.ssp,
-                color = Color.Black,
-                fontWeight = FontWeight.Bold
-            )
-
-        }
 
 }
 

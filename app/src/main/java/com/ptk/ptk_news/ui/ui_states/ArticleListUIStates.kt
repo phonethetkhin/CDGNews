@@ -7,4 +7,5 @@ data class ArticleListUIStates(
 
     val showLoadingDialog: Boolean = false,
     val newsFeedList: List<ArticlesItem> = listOf(),
+    val headLinesList: List<ArticlesItem> = listOf(),
 )

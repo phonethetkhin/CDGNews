@@ -54,4 +54,35 @@ class ArticleListViewModel @Inject constructor(
             }
         }
     }.await()
+
+    suspend fun getHeadlines() = viewModelScope.async {
+        repository.getHeadlines("Israel", 1, "en").collectLatest { remoteResource ->
+            when (remoteResource) {
+                is RemoteResource.Loading -> _uiStates.update {
+                    it.copy(showLoadingDialog = true)
+                }
+
+                is RemoteResource.Success -> {
+                    if (!remoteResource.data.articles.isNullOrEmpty()) {
+                        _uiStates.update {
+                            it.copy(
+                                showLoadingDialog = false,
+                                headLinesList = remoteResource.data.articles
+                            )
+                        }
+                    }
+                }
+
+                is RemoteResource.Failure -> {
+                    _uiStates.update {
+                        it.copy(
+                            showLoadingDialog = false,
+                        )
+                    }
+                    context.showToast(remoteResource.errorMessage.toString())
+                }
+            }
+        }
+    }.await()
+
 }

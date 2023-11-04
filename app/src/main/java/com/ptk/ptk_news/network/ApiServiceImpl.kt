@@ -36,5 +36,18 @@ class ApiServiceImpl @Inject constructor(
 
     }
 
+    override suspend fun getHeadlines(
+        query: String,
+        pageNum: Int,
+        language: String
+    ): NewsFeedResponseModel = client.get {
+        url(BASE_URL + APIRoutes.newsFeed)
+        contentType(ContentType.Application.Json)
+        parameter("apiKey", Constants.API_KEY)
+        parameter("q", query)
+        parameter("pageNum", pageNum)
+        parameter("language", language)
+    }
+
 
 }

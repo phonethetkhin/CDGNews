@@ -41,4 +41,33 @@ class ArticleListRepository @Inject constructor(
             }
         }
     }
+
+    suspend fun getHeadlines(
+        query: String,
+        pageNum: Int,
+        language: String
+    ) = channelFlow {
+        send(RemoteResource.Loading)
+        try {
+            val response =
+                apiService.getHeadlines(query, pageNum, language)
+            send(RemoteResource.Success(response))
+        } catch (e: Exception) {
+            when (e) {
+                is SocketTimeoutException -> {
+                    send(RemoteResource.Failure(errorMessage = context.getString(R.string.connection_error_message)))
+                }
+
+                is ConnectTimeoutException -> {
+                    send(RemoteResource.Failure(errorMessage = context.getString(R.string.connection_error_message)))
+                }
+
+                else -> {
+                    val errorMessage = "Something went wrong: ${e.localizedMessage}"
+                    send(RemoteResource.Failure(errorMessage = errorMessage))
+                }
+            }
+        }
+    }
+
 }
