@@ -23,6 +23,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FilterAlt
+import androidx.compose.material.icons.filled.FilterAltOff
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerState
@@ -76,7 +77,10 @@ fun NewsFeedScreen(
     ) {
     val uiStates by newsFeedViewModel.uiStates.collectAsState()
 
+
     LaunchedEffect(key1 = Unit) {
+        newsFeedViewModel.getAllSources()
+
         /* newsFeedViewModel.getSources()
          newsFeedViewModel.getNewsFeed()*/
     }
@@ -174,6 +178,7 @@ fun NewsFeedScreenContent(
 
             SearchView(
                 selectedText = uiStates.searchText,
+                hideKeyboard = drawerState.isOpen,
                 onSearchValueChanged = viewModel::toggleSearchValueChange,
                 modifier = Modifier.weight(1F)
             ) {
@@ -184,7 +189,10 @@ fun NewsFeedScreenContent(
             Spacer(modifier = Modifier.width(4.sdp))
 
             Icon(
-                imageVector = Icons.Filled.FilterAlt,
+                imageVector = if (uiStates.selectedCategory == 0
+                    && uiStates.selectedCountry == "All Countries"
+                    && uiStates.availableSources.none { it.selected }
+                ) Icons.Filled.FilterAltOff else Icons.Filled.FilterAlt,
                 contentDescription = "FilterIcon",
                 modifier = Modifier
                     .size(30.sdp)

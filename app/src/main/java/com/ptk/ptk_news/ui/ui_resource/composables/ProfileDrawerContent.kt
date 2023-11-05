@@ -2,7 +2,6 @@
 
 package com.ptk.ptk_news.ui.ui_resource.composables
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -32,10 +31,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
@@ -46,90 +42,62 @@ import com.ptk.ptk_news.ui.ui_resource.theme.Red
 import com.ptk.ptk_news.ui.ui_states.NewsFeedUIStates
 import com.ptk.ptk_news.viewmodel.NewsFeedViewModel
 import ir.kaaveh.sdpcompose.sdp
-import kotlinx.coroutines.launch
 
 @Composable
-fun DrawerContent(
+fun ProfileDrawerContent(
     uiStates: NewsFeedUIStates,
     viewModel: NewsFeedViewModel,
     onDismiss: () -> Unit,
     onSave: () -> Unit,
+) {
 
-    ) {
-    LaunchedEffect(Unit) {
-        val categoryId = viewModel.getPreferredCategory() ?: 0
-        val countryId = viewModel.getPreferredCountry()
-        val country =
-            uiStates.availableCountries.find { it.id == countryId }?.name ?: "United States"
-        val sources = viewModel.getPreferredSources()
 
-        viewModel.toggleSelectedCategory(categoryId)
-        viewModel.toggleSelectedCountry(country)
-
-        if (sources!!.isNotEmpty()) {
-            val sourcesList = sources.split(",")
-            sourcesList.forEach {
-                viewModel.toggleInitialSelectedSources(it)
-            }
-        }
-    }
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(8.sdp)
             .verticalScroll(rememberScrollState())
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            val scope = rememberCoroutineScope()
-            SwitchWithLabel(
-                label = "Filter By Sources?",
-                isFilterBySource = uiStates.isFilterBySource
-            ) {
-                scope.launch {
-                    viewModel.toggleSelectedFilterBySource(it)
+
+        Spacer(modifier = Modifier.height(16.sdp))
+        Icon(
+            imageVector = Icons.Filled.Close,
+            contentDescription = "Close Icon",
+            tint = Color.White,
+            modifier = Modifier
+                .padding(end = 4.sdp)
+                .align(Alignment.End)
+
+                .clickable { onDismiss.invoke() }
+                .drawBehind {
+                    drawCircle(
+                        color = Red,
+                        radius = this.size.maxDimension
+                    )
                 }
-            }
-            Icon(
-                imageVector = Icons.Filled.Close,
-                contentDescription = "Close Icon",
-                tint = Color.White,
-                modifier = Modifier
-                    .padding(end = 4.sdp)
-                    .clickable { onDismiss.invoke() }
-                    .drawBehind {
-                        drawCircle(
-                            color = Red,
-                            radius = this.size.maxDimension
-                        )
-                    }
-            )
+        )
 
 
-        }
-        Divider(Modifier.padding(top = 8.sdp))
+        PFilterByCategoryLayout(
+            uiStates, viewModel
+        )
+        Spacer(modifier = Modifier.height(16.sdp))
 
-        if (uiStates.isFilterBySource) {
-            FilterBySourceLayout(uiStates, viewModel, onSave)
-        } else {
-            FilterByCategoryLayout(
-                uiStates, viewModel, onSave
-            )
-        }
+        Divider()
+        PFilterBySourceLayout(uiStates = uiStates, viewModel = viewModel, onSave)
+
 
     }
 }
 
 @Composable
-fun FilterBySourceLayout(
+fun PFilterBySourceLayout(
     uiStates: NewsFeedUIStates,
     viewModel: NewsFeedViewModel,
     onSave: () -> Unit
 ) {
     Text(
-        text = "Filter by source",
+        text = "Preferred Source",
         fontSize = MaterialTheme.typography.titleLarge.fontSize,
         color = Color.Black,
         fontWeight = FontWeight.Bold,
@@ -198,8 +166,6 @@ fun FilterBySourceLayout(
 
     }
     Spacer(modifier = Modifier.height(16.sdp))
-
-
     MyButton(
         text = "Save", textColor = Color.White, buttonColor = ButtonDefaults.buttonColors(
             MaterialTheme.colorScheme.primary
@@ -209,19 +175,20 @@ fun FilterBySourceLayout(
     ) {
 
         onSave.invoke()
+
     }
+
 }
 
 @Composable
-fun FilterByCategoryLayout(
+fun PFilterByCategoryLayout(
     uiStates: NewsFeedUIStates,
     viewModel: NewsFeedViewModel,
-    onSave: () -> Unit
 
 
-) {
+    ) {
     Text(
-        text = "Filter by category",
+        text = "Preferred Category",
         fontSize = MaterialTheme.typography.titleLarge.fontSize,
         color = Color.Black,
         fontWeight = FontWeight.Bold,
@@ -239,7 +206,7 @@ fun FilterByCategoryLayout(
             val border = if (category.id == uiStates.selectedCategory) 0.sdp else 1.sdp
             val alpha = if (category.id == uiStates.selectedCategory) 1F else 0F
 
-            Row(verticalAlignment = CenterVertically, modifier = Modifier
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier
                 .padding(top = 8.sdp)
                 .background(color = color, shape = CircleShape)
                 .border(
@@ -276,7 +243,7 @@ fun FilterByCategoryLayout(
     Divider()
 
     Text(
-        text = "Filter by country",
+        text = "Preferred Country",
         fontSize = MaterialTheme.typography.titleLarge.fontSize,
         color = Color.Black,
         fontWeight = FontWeight.Bold,
@@ -294,15 +261,4 @@ fun FilterByCategoryLayout(
     Spacer(modifier = Modifier.height(16.sdp))
 
 
-    MyButton(
-        text = "Save", textColor = Color.White, buttonColor = ButtonDefaults.buttonColors(
-            MaterialTheme.colorScheme.primary
-        ),
-
-        modifier = Modifier.fillMaxWidth()
-    ) {
-
-        onSave.invoke()
-
-    }
 }

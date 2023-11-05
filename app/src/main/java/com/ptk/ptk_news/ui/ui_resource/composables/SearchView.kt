@@ -16,21 +16,24 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import ir.kaaveh.sdpcompose.sdp
-import ir.kaaveh.sdpcompose.ssp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchView(
     selectedText: String,
     placeholder: String = "Search News",
+    hideKeyboard: Boolean = false,
     onSearchValueChanged: (String) -> Unit,
     modifier: Modifier = Modifier,
     onSearch: () -> Unit
 ) {
+
+    val focusManager = LocalFocusManager.current
 
     OutlinedTextField(
         value = selectedText,
@@ -73,6 +76,7 @@ fun SearchView(
             fontSize = MaterialTheme.typography.labelSmall.fontSize, // Text size
 
         ),
+
         singleLine = true,
         shape = RoundedCornerShape(8.sdp),
         colors = TextFieldDefaults.outlinedTextFieldColors(
@@ -80,5 +84,8 @@ fun SearchView(
             unfocusedBorderColor = MaterialTheme.colorScheme.primary
         ),
     )
+    if (hideKeyboard) {
+        focusManager.clearFocus()
+    }
 
 }

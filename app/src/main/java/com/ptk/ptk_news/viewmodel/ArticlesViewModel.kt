@@ -4,18 +4,14 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ptk.ptk_news.model.RemoteResource
-import com.ptk.ptk_news.model.dto.response.SourcesItem
+import com.ptk.ptk_news.db.entity.SourceEntity
 import com.ptk.ptk_news.repository.NewsFeedRepository
 import com.ptk.ptk_news.ui.ui_states.ArticlesUIStates
-import com.ptk.ptk_news.ui.ui_states.NewsFeedUIStates
 import com.ptk.ptk_news.util.datastore.MyDataStore
-import com.ptk.ptk_news.util.showToast
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -40,6 +36,11 @@ class ArticlesViewModel @Inject constructor(
 
     fun toggleSortBy(sortBy: Int) {
         _uiStates.update { it.copy(selectedSortBy = sortBy) }
+
+    }
+
+    fun toggleIsShowFilterSourceDialog(isShowFilterSourceDialog: Boolean) {
+        _uiStates.update { it.copy(isShowFilterDialog = isShowFilterSourceDialog) }
     }
 
     fun toggleSource(source: String) {
@@ -83,7 +84,49 @@ class ArticlesViewModel @Inject constructor(
                         selected = !details.selected
                     )
                     else details
-                } as ArrayList<SourcesItem>)
+                } as ArrayList<SourceEntity>)
+        }
+    }
+
+    fun toggleInitialSelectedSources(selectedSource: String) {
+        val selectedSourceItem = _uiStates.value.availableSources.find { it.id == selectedSource }
+
+        _uiStates.update { uiStates ->
+            uiStates.copy(
+                source = "",
+                sourceSuggestions = arrayListOf(),
+                availableSources = _uiStates.value.availableSources.mapIndexed { index, details ->
+                    if (_uiStates.value.availableSources.indexOf(_uiStates.value.availableSources.find { it.id == selectedSourceItem?.id }) == index) details.copy(
+                        selected = true
+                    )
+                    else details
+                } as ArrayList<SourceEntity>)
+        }
+
+    }
+
+    fun resetSelectedValue() {
+        viewModelScope.launch {
+            if (_uiStates.value.availableSources.isNotEmpty()) {
+                val sources = getPreferredSources()
+                if (sources!!.isNotEmpty()) {
+                    val sourcesList = sources.split(",")
+
+                    sourcesList.forEach {
+                        toggleInitialSelectedSources(it)
+                    }
+                }
+            }
+        }
+    }
+
+    fun savePreferredSetting() {
+        viewModelScope.launch {
+            val sources =
+                _uiStates.value.availableSources.filter { it.selected }.map { it.id }
+                    .joinToString(",")
+
+            dataStore.savePreferredSources(sources)
         }
     }
 
@@ -95,33 +138,64 @@ class ArticlesViewModel @Inject constructor(
         val sources = _uiStates.value.availableSources.filter { it.selected }.map { it.id }
             .joinToString(",")
 
-        repository.getArticles(query, sources, "popularity", 1).collectLatest { remoteResource ->
-            when (remoteResource) {
-                is RemoteResource.Loading -> _uiStates.update {
-                    it.copy(showLoadingDialog = true)
-                }
+        val sortBy = when (_uiStates.value.selectedSortBy) {
+            1 -> "relevancy"
+            2 -> "popularity"
+            3 -> "publishedAt"
+            else -> "publishedAt"
+        }
 
-                is RemoteResource.Success -> {
-                    if (!remoteResource.data.articles.isNullOrEmpty()) {
-                        _uiStates.update {
-                            it.copy(
-                                showLoadingDialog = false,
-                                articlesList = remoteResource.data.articles
-                            )
-                        }
-                    }
-                }
+        Log.e("requestModel1", query.toString())
+        Log.e("requestModel2", sources.toString())
+        Log.e("requestModel3", sortBy.toString())
 
-                is RemoteResource.Failure -> {
-                    _uiStates.update {
-                        it.copy(
-                            showLoadingDialog = false,
-                        )
-                    }
-                    context.showToast(remoteResource.errorMessage.toString())
+        /* repository.getArticles(query, sources, "popularity", 1).collectLatest { remoteResource ->
+             when (remoteResource) {
+                 is RemoteResource.Loading -> _uiStates.update {
+                     it.copy(showLoadingDialog = true)
+                 }
+
+                 is RemoteResource.Success -> {
+                     if (!remoteResource.data.articles.isNullOrEmpty()) {
+                         _uiStates.update {
+                             it.copy(
+                                 showLoadingDialog = false,
+                                 articlesList = remoteResource.data.articles
+                             )
+                         }
+                     }
+                 }
+
+                 is RemoteResource.Failure -> {
+                     _uiStates.update {
+                         it.copy(
+                             showLoadingDialog = false,
+                         )
+                     }
+                     context.showToast(remoteResource.errorMessage.toString())
+                 }
+             }
+         }*/
+    }.await()
+
+    //=======================================db function=========================================//
+
+    suspend fun getAllSources() {
+        val dbSources = repository.getAllSources()
+        _uiStates.update { it.copy(availableSources = dbSources) }
+
+
+        if (_uiStates.value.availableSources.isNotEmpty()) {
+            val sources = getPreferredSources()
+            if (sources!!.isNotEmpty()) {
+                val sourcesList = sources.split(",")
+                sourcesList.forEach {
+                    toggleInitialSelectedSources(it)
                 }
             }
         }
-    }.await()
+    }
+
+    suspend fun getPreferredSources() = dataStore.preferredSources.first()
 
 }

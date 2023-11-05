@@ -1,16 +1,15 @@
 package com.ptk.ptk_news.ui.screen
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material3.Icon
@@ -20,11 +19,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -35,8 +32,6 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.ptk.ptk_news.R
-import com.ptk.ptk_news.model.dto.response.ArticlesItem
-import com.ptk.ptk_news.ui.ui_resource.theme.Red
 import com.ptk.ptk_news.viewmodel.NewsFeedViewModel
 import ir.kaaveh.sdpcompose.sdp
 
@@ -62,7 +57,9 @@ fun DetailScreen(
 @Composable
 fun DetailScreenContent() {
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
     ) {
         Box {
             AsyncImage(
@@ -98,7 +95,7 @@ fun DetailScreenContent() {
             "Title THe polic Brnyr shwe shaung",
             fontSize = MaterialTheme.typography.titleLarge.fontSize,
             color = Color.Black,
-            fontWeight = FontWeight.Bold,modifier = Modifier.padding(start = 8.sdp, top=8.sdp)
+            fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 8.sdp, top = 8.sdp)
         )
 
         Text(
@@ -113,6 +110,12 @@ fun DetailScreenContent() {
                 )
                 .background(MaterialTheme.colorScheme.primary)
                 .padding(8.sdp)
+        )
+
+        Text(
+            "Title THe polic Brnyr shwe shaung, asdf tkejrkjekja asdfjaklsdfjalk asdfasdfqwer qerqwerqw qwerlzkjljk qwerpeirpipoi pqeiowrqioweruqiweurasdfjaioesqwerqweruqeiwouiouqiuweoriuqweruqoweruoqieuwroqwueiorquweioruqwoeiur asdcfadsjfkadsjfkasdfajslkdfjlaksjdfaksdjflajsfalsjkdflajfljasdfjalsjdfaksjfkdfj adsfaljdsfklajsdflkajskldfjalkdjsfklajsdkfjalksdjfkj aksjdfkajklsdfjklasdlfjalksdfjalsdflj asdfjalsdjfklajsdfkljalskdfjlaksjdf asdjflakjsdlfkjaklsdfjla;dfajs adsfklajlsdkfjakljfslasjdfl adjsfklajsdlfalsdfj;aljfs aklsdfjlaksdjfalkjsdfaklsdfj Title THe polic Brnyr shwe shaung, asdf tkejrkjekja asdfjaklsdfjalk asdfasdfqwer qerqwerqw qwerlzkjljk qwerpeirpipoi pqeiowrqioweruqiweurasdfjaioesqwerqweruqeiwouiouqiuweoriuqweruqoweruoqieuwroqwueiorquweioruqwoeiur asdcfadsjfkadsjfkasdfajslkdfjlaksjdfaksdjflajsfalsjkdflajfljasdfjalsjdfaksjfkdfj adsfaljdsfklajsdflkajskldfjalkdjsfklajsdkfjalksdjfkj aksjdfkajklsdfjklasdlfjalksdfjalsdflj asdfjalsdjfklajsdfkljalskdfjlaksjdf asdjflakjsdlfkjaklsdfjla;dfajs adsfklajlsdkfjakljfslasjdfl adjsfklajsdlfalsdfj;aljfs aklsdfjlaksdjfalkjsdfaklsdfj",
+            fontSize = MaterialTheme.typography.labelSmall.fontSize,
+            modifier = Modifier.padding(start = 8.sdp, top = 8.sdp)
         )
 
     }

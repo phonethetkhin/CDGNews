@@ -3,6 +3,7 @@
 package com.ptk.ptk_news.ui.screen
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -49,7 +50,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.ptk.ptk_news.MainActivity
-import com.ptk.ptk_news.ui.ui_resource.composables.DrawerContent
+import com.ptk.ptk_news.ui.ui_resource.composables.ProfileDrawerContent
 import com.ptk.ptk_news.ui.ui_resource.theme.Blue
 import com.ptk.ptk_news.ui.ui_resource.theme.Orange
 import com.ptk.ptk_news.ui.ui_resource.theme.Purple
@@ -70,10 +71,17 @@ fun ProfileScreen(
     profileViewModel: ProfileViewModel = hiltViewModel(),
     newsFeedViewModel: NewsFeedViewModel = hiltViewModel(),
 ) {
+    val uiStates by profileViewModel.uiStates.collectAsState()
+    val newsFeedUIStates by newsFeedViewModel.uiStates.collectAsState()
+    profileViewModel._newsFeedUIStates = newsFeedViewModel._uiStates
+
 
     LaunchedEffect(Unit) {
         val themeId = profileViewModel.getThemeId() ?: 1
         profileViewModel.toggleThemeId(themeId)
+        newsFeedViewModel.getAllSources()
+
+
 
         val textSizeId = profileViewModel.getTextSizeId() ?: 2
         val textSizeString = when (textSizeId) {
@@ -87,10 +95,8 @@ fun ProfileScreen(
     val context = LocalContext.current
     val activity = context.getComponentActivity() as MainActivity
 
-    val uiStates by profileViewModel.uiStates.collectAsState()
-    val newsFeedUIStates by newsFeedViewModel.uiStates.collectAsState()
 
-    profileViewModel._newsFeedUIStates = newsFeedViewModel._uiStates
+
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()
@@ -108,7 +114,7 @@ fun ProfileScreen(
                                 if (drawerState.targetValue == DrawerValue.Open) Modifier.fillMaxSize() else Modifier
                             )
                     ) {
-                        DrawerContent(
+                        ProfileDrawerContent(
                             newsFeedUIStates, newsFeedViewModel, onDismiss = {
                                 if (drawerState.isOpen) {
                                     coroutineScope.launch {
@@ -120,12 +126,10 @@ fun ProfileScreen(
                             }
                         ) {
 
-                            coroutineScope.launch {
-                                profileViewModel.savePreferredSetting()
-                                if (drawerState.isOpen) {
-                                    coroutineScope.launch {
-                                        drawerState.close()
-                                    }
+                            profileViewModel.savePreferredSetting()
+                            if (drawerState.isOpen) {
+                                coroutineScope.launch {
+                                    drawerState.close()
                                 }
                             }
                         }

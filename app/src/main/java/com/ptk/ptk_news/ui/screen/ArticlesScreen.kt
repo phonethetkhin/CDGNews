@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FilterAlt
+import androidx.compose.material.icons.filled.FilterAltOff
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -44,6 +45,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.ptk.ptk_news.R
 import com.ptk.ptk_news.model.dto.response.ArticlesItem
+import com.ptk.ptk_news.ui.ui_resource.composables.FilterSourceDialog
 import com.ptk.ptk_news.ui.ui_resource.composables.SearchView
 import com.ptk.ptk_news.ui.ui_states.ArticlesUIStates
 import com.ptk.ptk_news.viewmodel.ArticlesViewModel
@@ -63,10 +65,27 @@ fun ArticlesScreen(
 
 
     LaunchedEffect(key1 = Unit) {
-//        newsFeedViewModel.getArticles()
+
+        articlesViewModel.getAllSources()
+
     }
     ArticlesScreenContent(uiStates, articlesViewModel)
 
+    val scope = rememberCoroutineScope()
+    FilterSourceDialog(
+        showDialog = uiStates.isShowFilterDialog,
+        uiStates,
+        articlesViewModel,
+        onDismissRequest = {
+            articlesViewModel.resetSelectedValue()
+            articlesViewModel.toggleIsShowFilterSourceDialog(false)
+        }) {
+        scope.launch {
+            articlesViewModel.savePreferredSetting()
+            articlesViewModel.getArticles()
+            articlesViewModel.toggleIsShowFilterSourceDialog(false)
+        }
+    }
 
 }
 
@@ -101,16 +120,12 @@ fun ArticlesScreenContent(
             Spacer(modifier = Modifier.width(4.sdp))
 
             Icon(
-                imageVector = Icons.Filled.FilterAlt,
+                imageVector = if (uiStates.availableSources.none { it.selected }) Icons.Filled.FilterAltOff else Icons.Filled.FilterAlt,
                 contentDescription = "FilterIcon",
                 modifier = Modifier
                     .size(30.sdp)
                     .clickable {
-                        /*  scope.launch {
-                              if (drawerState.isClosed) {
-                                  drawerState.open()
-                              }
-                          }*/
+                        viewModel.toggleIsShowFilterSourceDialog(true)
                     },
                 tint = MaterialTheme.colorScheme.primary
             )
@@ -127,6 +142,9 @@ fun ArticlesScreenContent(
                     .clip(RoundedCornerShape(8.sdp))
                     .clickable {
                         viewModel.toggleSortBy(1)
+                        scope.launch {
+                            viewModel.getArticles()
+                        }
                     }
                     .background(color = if (uiStates.selectedSortBy == 1) MaterialTheme.colorScheme.secondary else Color.Transparent)
                     .padding(8.sdp)
@@ -143,6 +161,9 @@ fun ArticlesScreenContent(
                     .clip(RoundedCornerShape(8.sdp))
                     .clickable {
                         viewModel.toggleSortBy(2)
+                        scope.launch {
+                            viewModel.getArticles()
+                        }
 
                     }
                     .background(color = if (uiStates.selectedSortBy == 2) MaterialTheme.colorScheme.secondary else Color.Transparent)
@@ -160,7 +181,9 @@ fun ArticlesScreenContent(
                     .clip(RoundedCornerShape(8.sdp))
                     .clickable {
                         viewModel.toggleSortBy(3)
-
+                        scope.launch {
+                            viewModel.getArticles()
+                        }
                     }
                     .background(color = if (uiStates.selectedSortBy == 3) MaterialTheme.colorScheme.secondary else Color.Transparent)
                     .padding(8.sdp)

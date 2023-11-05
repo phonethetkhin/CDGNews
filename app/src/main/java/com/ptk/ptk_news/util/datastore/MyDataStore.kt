@@ -4,8 +4,10 @@ import android.app.Application
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -16,11 +18,24 @@ class MyDataStore @Inject constructor(private val application: Application) {
     // to make sure there's only one instance
     companion object {
         private val Context.dataStore: DataStore<Preferences> by preferencesDataStore("imsDataStore")
+        val IS_FIRST_LAUNCH = booleanPreferencesKey("isFirstLaunch")
         val THEME_ID = intPreferencesKey("themeId")
         val TEXT_SIZE_ID = intPreferencesKey("textSizeId")
         val PREFERRED_CATEGORY_ID = intPreferencesKey("preferredCategoryId")
         val PREFERRED_COUNTRY_ID = intPreferencesKey("preferredCountryId")
+        val PREFERRED_SOURCES = stringPreferencesKey("preferredSources")
 
+    }
+
+    val isFirstLaunch: Flow<Boolean?> = application.dataStore.data
+        .map { preferences ->
+            preferences[IS_FIRST_LAUNCH] ?: true
+        }
+
+    suspend fun saveIsFirstLaunch(firstLaunch: Boolean) {
+        application.dataStore.edit { preferences ->
+            preferences[IS_FIRST_LAUNCH] = firstLaunch
+        }
     }
 
     val themeId: Flow<Int?> = application.dataStore.data
@@ -64,6 +79,17 @@ class MyDataStore @Inject constructor(private val application: Application) {
     suspend fun savePreferredCountryId(countryId: Int) {
         application.dataStore.edit { preferences ->
             preferences[PREFERRED_COUNTRY_ID] = countryId
+        }
+    }
+
+    val preferredSources: Flow<String?> = application.dataStore.data
+        .map { preferences ->
+            preferences[PREFERRED_SOURCES] ?: ""
+        }
+
+    suspend fun savePreferredSources(sources: String) {
+        application.dataStore.edit { preferences ->
+            preferences[PREFERRED_SOURCES] = sources
         }
     }
 

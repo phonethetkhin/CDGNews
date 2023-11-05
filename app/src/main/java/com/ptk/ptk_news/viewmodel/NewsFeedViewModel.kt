@@ -4,17 +4,14 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ptk.ptk_news.model.RemoteResource
-import com.ptk.ptk_news.model.dto.response.SourcesItem
+import com.ptk.ptk_news.db.entity.SourceEntity
 import com.ptk.ptk_news.repository.NewsFeedRepository
 import com.ptk.ptk_news.ui.ui_states.NewsFeedUIStates
 import com.ptk.ptk_news.util.datastore.MyDataStore
-import com.ptk.ptk_news.util.showToast
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -37,18 +34,40 @@ class NewsFeedViewModel @Inject constructor(
         _uiStates.update { it.copy(selectedCategory = categoryId) }
     }
 
-    fun toggleSelectedFilterBySource(isFilterBySource: Boolean) {
+    suspend fun toggleSelectedFilterBySource(isFilterBySource: Boolean) {
         _uiStates.update { it.copy(isFilterBySource = isFilterBySource) }
+
+        val categoryId = getPreferredCategory() ?: 0
+        val countryId = getPreferredCountry()
+        val country =
+            _uiStates.value.availableCountries.find { it.id == countryId }?.name
+                ?: "United States"
+        val sources = getPreferredSources()
+
         if (isFilterBySource) {
-            _uiStates.update { it.copy(selectedCategory = 0, selectedCountry = "") }
+            if (_uiStates.value.availableSources.isNotEmpty()) {
+                if (sources!!.isNotEmpty()) {
+                    val sourcesList = sources.split(",")
+
+                    sourcesList.forEach {
+                        toggleInitialSelectedSources(it)
+                    }
+                }
+            }
         } else {
             _uiStates.update {
-                it.copy(availableSources = _uiStates.value.availableSources.mapIndexed { index, details ->
-                    details.copy(selected = false)
-                } as ArrayList<SourcesItem>)
+                it.copy(
+                    availableSources = _uiStates.value.availableSources.mapIndexed { index, details ->
+                        details.copy(selected = false)
+
+                    } as ArrayList<SourceEntity>)
             }
 
+            toggleSelectedCategory(categoryId)
+            toggleSelectedCountry(country)
         }
+
+
     }
 
     fun toggleSelectedCountry(selectedCountry: String) {
@@ -100,8 +119,26 @@ class NewsFeedViewModel @Inject constructor(
                         selected = !details.selected
                     )
                     else details
-                } as ArrayList<SourcesItem>)
+                } as ArrayList<SourceEntity>)
         }
+
+    }
+
+    fun toggleInitialSelectedSources(selectedSource: String) {
+        val selectedSourceItem = _uiStates.value.availableSources.find { it.id == selectedSource }
+
+        _uiStates.update { uiStates ->
+            uiStates.copy(
+                source = "",
+                sourceSuggestions = arrayListOf(),
+                availableSources = _uiStates.value.availableSources.mapIndexed { index, details ->
+                    if (_uiStates.value.availableSources.indexOf(_uiStates.value.availableSources.find { it.id == selectedSourceItem?.id }) == index) details.copy(
+                        selected = true
+                    )
+                    else details
+                } as ArrayList<SourceEntity>)
+        }
+
     }
 
     fun resetSelectedValue() {
@@ -114,6 +151,17 @@ class NewsFeedViewModel @Inject constructor(
 
             toggleSelectedCategory(categoryId)
             toggleSelectedCountry(country)
+
+            if (_uiStates.value.availableSources.isNotEmpty()) {
+                val sources = getPreferredSources()
+                if (sources!!.isNotEmpty()) {
+                    val sourcesList = sources.split(",")
+
+                    sourcesList.forEach {
+                        toggleInitialSelectedSources(it)
+                    }
+                }
+            }
         }
     }
 
@@ -123,17 +171,21 @@ class NewsFeedViewModel @Inject constructor(
             val countryId =
                 _uiStates.value.availableCountries.find { it.name == _uiStates.value.selectedCountry }?.id
                     ?: 53
+            val sources =
+                _uiStates.value.availableSources.filter { it.selected }.map { it.id }
+                    .joinToString(",")
 
-            Log.e("tesjkasdfId3", categoryId.toString())
-            Log.e("tesjkasdfId4", countryId.toString())
             dataStore.savePreferredCategoryId(categoryId)
             dataStore.savePreferredCountryId(countryId)
+            dataStore.savePreferredSources(sources)
+
         }
     }
 
     suspend fun getPreferredCategory() = dataStore.preferredCategoryId.first()
 
     suspend fun getPreferredCountry() = dataStore.preferredCountryId.first()
+    suspend fun getPreferredSources() = dataStore.preferredSources.first()
 
 
     //=======================================api function=========================================//
@@ -143,17 +195,22 @@ class NewsFeedViewModel @Inject constructor(
             if (_uiStates.value.selectedCountry != "All Countries") {
                 selectedCountry = _uiStates.value.selectedCountry
             }
-            val country =
+            var country =
                 _uiStates.value.availableCountries.find { it.name == selectedCountry }?.code
                     ?: ""
-            val category =
-                _uiStates.value.availableCategories.find { it.id == _uiStates.value.selectedCategory }?.name
+            var category =
+                _uiStates.value.availableCategories.find { _uiStates.value.selectedCategory != 0 && it.id == _uiStates.value.selectedCategory }?.name
                     ?: ""
-            val sources = _uiStates.value.availableSources.filter { it.selected }.map { it.id }
+            var sources = _uiStates.value.availableSources.filter { it.selected }.map { it.id }
                 .joinToString(",")
             val query = _uiStates.value.searchText
 
-
+            if (_uiStates.value.isFilterBySource) {
+                country = ""
+                category = ""
+            } else {
+                sources = ""
+            }
             Log.e("requestMessage1", country)
             Log.e("requestMessage2", category)
             Log.e("requestMessage3", sources)
@@ -197,35 +254,28 @@ class NewsFeedViewModel @Inject constructor(
                  }*/
         }.await()
 
+    //=======================================db function=========================================//
 
-    suspend fun getSources() = viewModelScope.async {
-        repository.getSources().collectLatest { remoteResource ->
-            when (remoteResource) {
-                is RemoteResource.Loading -> _uiStates.update {
-                    it.copy(showLoadingDialog = true)
-                }
+    suspend fun getAllSources() {
+        val dbSources = repository.getAllSources()
+        _uiStates.update { it.copy(availableSources = dbSources) }
+        val categoryId = getPreferredCategory() ?: 0
+        val countryId = getPreferredCountry()
+        val country =
+            _uiStates.value.availableCountries.find { it.id == countryId }?.name ?: "United States"
+        if (_uiStates.value.availableSources.isNotEmpty()) {
+            val sources = getPreferredSources()
 
-                is RemoteResource.Success -> {
-                    if (remoteResource.data.sources.isNotEmpty()) {
-                        _uiStates.update {
-                            it.copy(
-                                showLoadingDialog = false,
-                                availableSources = remoteResource.data.sources
-                            )
-                        }
-                    }
-                }
+            toggleSelectedCategory(categoryId)
+            toggleSelectedCountry(country)
+            if (sources!!.isNotEmpty()) {
+                val sourcesList = sources.split(",")
 
-                is RemoteResource.Failure -> {
-                    _uiStates.update {
-                        it.copy(
-                            showLoadingDialog = false,
-                        )
-                    }
-                    context.showToast(remoteResource.errorMessage.toString())
+                sourcesList.forEach {
+                    toggleInitialSelectedSources(it)
                 }
             }
         }
-    }.await()
+    }
 
 }

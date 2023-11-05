@@ -12,7 +12,6 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -49,8 +48,7 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @Inject
-    lateinit var datastore: MyDataStore
-
+    lateinit var dataStore: MyDataStore
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -79,21 +77,21 @@ class MainActivity : ComponentActivity() {
                 labelSmall = LargeFontSize.labelSmall.copy(fontSize = 16.ssp),
             )
             LaunchedEffect(Unit) {
-                lightColorScheme = when (datastore.themeId.first()) {
+                lightColorScheme = when (dataStore.themeId.first()) {
                     1 -> LightColorSchemeOrange
                     2 -> LightColorSchemeYellow
                     3 -> LightColorSchemeBlue
                     4 -> LightColorSchemePurple
                     else -> LightColorSchemeOrange
                 }
-                darkColorScheme = when (datastore.themeId.first()) {
+                darkColorScheme = when (dataStore.themeId.first()) {
                     1 -> DarkColorSchemeOrange
                     2 -> DarkColorSchemeYellow
                     3 -> DarkColorSchemeBlue
                     4 -> DarkColorSchemePurple
                     else -> DarkColorSchemeOrange
                 }
-                typography = when (datastore.textSizeId.first()) {
+                typography = when (dataStore.textSizeId.first()) {
                     1 -> modifiedSmallFontSize
                     2 -> modifiedMediumFontSize
                     3 -> modifiedLargeFontSize
@@ -121,10 +119,13 @@ fun MainComposable() {
     }
     val navBackStackEntry = navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry.value?.destination
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
-            NavigationBar(containerColor = MaterialTheme.colorScheme.primary) {
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.primary,
+            ) {
                 //getting the list of bottom navigation items for our data class
                 bottomNavigationItems().forEachIndexed { index, navigationItem ->
                     //iterating all items with their respective indexes

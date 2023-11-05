@@ -1,5 +1,6 @@
 package com.ptk.ptk_news.model.dto.response
 
+import com.ptk.ptk_news.db.entity.SourceEntity
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -8,35 +9,10 @@ import kotlinx.serialization.Serializable
 data class SourceResponseModel(
 
     @SerialName("sources")
-    val sources: List<SourcesItem> = listOf(),
+    val sources: List<SourceEntity> = listOf(),
 
     @SerialName("status")
     val status: String? = null
 )
 
-@Serializable
-data class SourcesItem(
 
-    @SerialName("country")
-    val country: String? = null,
-
-    @SerialName("name")
-    val name: String? = null,
-
-    @SerialName("description")
-    val description: String? = null,
-
-    @SerialName("language")
-    val language: String? = null,
-
-    @SerialName("id")
-    val id: String? = null,
-
-    @SerialName("category")
-    val category: String? = null,
-
-    @SerialName("url")
-    val url: String? = null,
-    
-    val selected: Boolean = false,
-)

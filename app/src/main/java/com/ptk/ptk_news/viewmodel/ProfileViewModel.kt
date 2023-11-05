@@ -1,7 +1,6 @@
 package com.ptk.ptk_news.viewmodel
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ptk.ptk_news.ui.ui_states.NewsFeedUIStates
@@ -58,11 +57,13 @@ class ProfileViewModel @Inject constructor(
             val countryId =
                 _newsFeedUIStates.value.availableCountries.find { it.name == _newsFeedUIStates.value.selectedCountry }?.id
                     ?: 53
+            val sources =
+                _newsFeedUIStates.value.availableSources.filter { it.selected }.map { it.id }
+                    .joinToString(",")
 
-            Log.e("tesjkasdfId3", categoryId.toString())
-            Log.e("tesjkasdfId4", countryId.toString())
             dataStore.savePreferredCategoryId(categoryId)
             dataStore.savePreferredCountryId(countryId)
+            dataStore.savePreferredSources(sources)
         }
     }
 

@@ -1,7 +1,7 @@
 package com.ptk.ptk_news.ui.ui_states
 
+import com.ptk.ptk_news.db.entity.SourceEntity
 import com.ptk.ptk_news.model.dto.response.ArticlesItem
-import com.ptk.ptk_news.model.dto.response.SourcesItem
 import com.ptk.ptk_news.model.ui_model.CategoryModel
 import com.ptk.ptk_news.model.ui_model.CountryModel
 import com.ptk.ptk_news.util.getCountriesList
@@ -16,6 +16,7 @@ data class NewsFeedUIStates(
 
     val selectedCategory: Int = 0,
     val availableCategories: List<CategoryModel> = listOf(
+        CategoryModel(id = 0, name = "All Categories"),
         CategoryModel(id = 1, name = "business"),
         CategoryModel(id = 2, name = "entertainment"),
         CategoryModel(id = 3, name = "general"),
@@ -30,7 +31,7 @@ data class NewsFeedUIStates(
 
     val source: String = "",
     val sourceSuggestions: ArrayList<String> = arrayListOf(),
-    val availableSources: List<SourcesItem> = listOf(),
+    val availableSources: List<SourceEntity> = listOf(),
 
     val searchText: String = "",
 
