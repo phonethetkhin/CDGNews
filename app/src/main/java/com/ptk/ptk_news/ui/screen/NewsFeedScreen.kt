@@ -230,7 +230,7 @@ fun HeadlinesListItem(article: ArticlesItem) {
                 .build(),
             placeholder = painterResource(R.drawable.placeholder),
             contentDescription = "ArticleImage",
-            contentScale = ContentScale.Crop,
+            contentScale = ContentScale.Fit,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(200.sdp)
