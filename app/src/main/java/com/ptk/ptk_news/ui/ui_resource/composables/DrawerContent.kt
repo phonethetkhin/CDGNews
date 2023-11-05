@@ -2,6 +2,7 @@
 
 package com.ptk.ptk_news.ui.ui_resource.composables
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -30,7 +32,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
@@ -41,7 +45,6 @@ import com.ptk.ptk_news.ui.ui_resource.theme.Red
 import com.ptk.ptk_news.ui.ui_states.NewsFeedUIStates
 import com.ptk.ptk_news.viewmodel.NewsFeedViewModel
 import ir.kaaveh.sdpcompose.sdp
-import ir.kaaveh.sdpcompose.ssp
 
 @Composable
 fun DrawerContent(
@@ -51,8 +54,18 @@ fun DrawerContent(
     onSave: () -> Unit,
 
     ) {
+    LaunchedEffect(Unit) {
+        val categoryId = viewModel.getPreferredCategory() ?: 0
+        val countryId = viewModel.getPreferredCountry()
+        val country =
+            uiStates.availableCountries.find { it.id == countryId }?.name ?: "United States"
+
+        viewModel.toggleSelectedCategory(categoryId)
+        viewModel.toggleSelectedCountry(country)
+    }
     Column(
         modifier = Modifier
+            .fillMaxSize()
             .padding(8.sdp)
             .verticalScroll(rememberScrollState())
     ) {
@@ -76,14 +89,14 @@ fun DrawerContent(
                     .drawBehind {
                         drawCircle(
                             color = Red,
-                            radius = 40F
+                            radius = this.size.maxDimension
                         )
                     }
             )
 
 
         }
-        Divider()
+        Divider(Modifier.padding(top = 8.sdp))
 
         if (uiStates.isFilterBySource) {
             FilterBySourceLayout(uiStates, viewModel, onSave)
@@ -181,6 +194,7 @@ fun FilterBySourceLayout(
 
         modifier = Modifier.fillMaxWidth()
     ) {
+
         onSave.invoke()
     }
 }
@@ -212,7 +226,7 @@ fun FilterByCategoryLayout(
             val border = if (category.id == uiStates.selectedCategory) 0.sdp else 1.sdp
             val alpha = if (category.id == uiStates.selectedCategory) 1F else 0F
 
-            Row(modifier = Modifier
+            Row(verticalAlignment = CenterVertically, modifier = Modifier
                 .padding(top = 8.sdp)
                 .background(color = color, shape = CircleShape)
                 .border(
@@ -274,6 +288,8 @@ fun FilterByCategoryLayout(
 
         modifier = Modifier.fillMaxWidth()
     ) {
+
         onSave.invoke()
+
     }
 }

@@ -17,6 +17,9 @@ class MyDataStore @Inject constructor(private val application: Application) {
     companion object {
         private val Context.dataStore: DataStore<Preferences> by preferencesDataStore("imsDataStore")
         val THEME_ID = intPreferencesKey("themeId")
+        val TEXT_SIZE_ID = intPreferencesKey("textSizeId")
+        val PREFERRED_CATEGORY_ID = intPreferencesKey("preferredCategoryId")
+        val PREFERRED_COUNTRY_ID = intPreferencesKey("preferredCountryId")
 
     }
 
@@ -28,6 +31,39 @@ class MyDataStore @Inject constructor(private val application: Application) {
     suspend fun saveThemeId(themeId: Int) {
         application.dataStore.edit { preferences ->
             preferences[THEME_ID] = themeId
+        }
+    }
+
+    val textSizeId: Flow<Int?> = application.dataStore.data
+        .map { preferences ->
+            preferences[TEXT_SIZE_ID] ?: 2
+        }
+
+    suspend fun saveTextSizeId(textSizeId: Int) {
+        application.dataStore.edit { preferences ->
+            preferences[TEXT_SIZE_ID] = textSizeId
+        }
+    }
+
+    val preferredCategoryId: Flow<Int?> = application.dataStore.data
+        .map { preferences ->
+            preferences[PREFERRED_CATEGORY_ID] ?: 0
+        }
+
+    suspend fun savePreferredCategoryId(categoryId: Int) {
+        application.dataStore.edit { preferences ->
+            preferences[PREFERRED_CATEGORY_ID] = categoryId
+        }
+    }
+
+    val preferredCountryId: Flow<Int?> = application.dataStore.data
+        .map { preferences ->
+            preferences[PREFERRED_COUNTRY_ID] ?: 0
+        }
+
+    suspend fun savePreferredCountryId(countryId: Int) {
+        application.dataStore.edit { preferences ->
+            preferences[PREFERRED_COUNTRY_ID] = countryId
         }
     }
 

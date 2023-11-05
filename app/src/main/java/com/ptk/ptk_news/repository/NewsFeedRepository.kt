@@ -48,14 +48,12 @@ class NewsFeedRepository @Inject constructor(
     }
 
     suspend fun getArticles(
-        query: String,
-        pageNum: Int,
-        language: String
+        query: String, sources: String, sortBy: String, pageNum: Int
     ) = channelFlow {
         send(RemoteResource.Loading)
         try {
             val response =
-                apiService.getArticles(query, pageNum, language)
+                apiService.getArticles(query, sources, sortBy, pageNum)
             send(RemoteResource.Success(response))
         } catch (e: Exception) {
             when (e) {

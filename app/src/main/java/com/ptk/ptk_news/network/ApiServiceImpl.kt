@@ -45,21 +45,27 @@ class ApiServiceImpl @Inject constructor(
         if (query.isNotEmpty()) {
             parameter("q", query)
         }
+        parameter("pageSize", 100)
         parameter("page", pageNum)
 
     }
 
     override suspend fun getArticles(
-        query: String,
-        pageNum: Int,
-        language: String
+        query: String, sources:String, sortBy:String, pageNum: Int
     ): NewsFeedResponseModel = client.get {
         url(BASE_URL + APIRoutes.articles)
         contentType(ContentType.Application.Json)
         parameter("apiKey", Constants.API_KEY)
-        parameter("q", query)
+        if(query.isNotEmpty()) {
+            parameter("q", query)
+        }
+        if(sources.isNotEmpty()){
+            parameter("sources", sources)
+        }
+        if(sortBy.isNotEmpty()){
+            parameter("sortBy", sortBy)
+        }
         parameter("pageNum", pageNum)
-        parameter("language", language)
     }
 
     override suspend fun getAllSources(): SourceResponseModel = client.get {

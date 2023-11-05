@@ -10,6 +10,7 @@ object Constants {
 }
 
 fun getCountriesList() = listOf(
+    CountryModel(0, "All Countries", ""),
     CountryModel(1, "Argentina", "ar"),
     CountryModel(2, "Australia", "au"),
     CountryModel(3, "Austria", "at"),

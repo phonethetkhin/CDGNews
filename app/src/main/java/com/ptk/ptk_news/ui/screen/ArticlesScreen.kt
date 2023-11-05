@@ -3,7 +3,9 @@
 package com.ptk.ptk_news.ui.screen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -11,19 +13,23 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,57 +38,144 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.ptk.ptk_news.R
 import com.ptk.ptk_news.model.dto.response.ArticlesItem
-import com.ptk.ptk_news.viewmodel.NewsFeedViewModel
+import com.ptk.ptk_news.ui.ui_resource.composables.SearchView
+import com.ptk.ptk_news.ui.ui_states.ArticlesUIStates
+import com.ptk.ptk_news.viewmodel.ArticlesViewModel
 import ir.kaaveh.sdpcompose.sdp
 import ir.kaaveh.sdpcompose.ssp
+import kotlinx.coroutines.launch
 
 
 //UIs
 @Composable
 fun ArticlesScreen(
     navController: NavController,
-    newsFeedViewModel: NewsFeedViewModel = hiltViewModel(),
+    articlesViewModel: ArticlesViewModel = hiltViewModel(),
 
     ) {
-    val uiStates by newsFeedViewModel.uiStates.collectAsState()
+    val uiStates by articlesViewModel.uiStates.collectAsState()
 
 
     LaunchedEffect(key1 = Unit) {
-        newsFeedViewModel.getArticles()
+//        newsFeedViewModel.getArticles()
     }
-    ArticlesScreenContent(navController, uiStates.newsFeedList)
+    ArticlesScreenContent(uiStates, articlesViewModel)
 
 
 }
 
 @Composable
-fun ArticlesScreenContent(navController: NavController, articleList: List<ArticlesItem>) {
+fun ArticlesScreenContent(
+    uiStates: ArticlesUIStates,
+    viewModel: ArticlesViewModel,
+) {
+    val scope = rememberCoroutineScope()
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxSize()
     ) {
 
-        Text(
-            "Articles",
-            fontSize = 16.ssp,
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color.Black)
-                .padding(vertical = 12.sdp),
-            color = Color.White,
-            textAlign = TextAlign.Center
-        )
-        Spacer(modifier = Modifier.height(8.sdp))
+                .padding(8.sdp)
+        ) {
 
-        ArticleList(articleList)
+            SearchView(
+                selectedText = uiStates.searchText,
+                onSearchValueChanged = viewModel::toggleSearchValueChange,
+                modifier = Modifier.weight(1F)
+            ) {
+                scope.launch {
+                    viewModel.getArticles()
+                }
+            }
+            Spacer(modifier = Modifier.width(4.sdp))
+
+            Icon(
+                imageVector = Icons.Filled.FilterAlt,
+                contentDescription = "FilterIcon",
+                modifier = Modifier
+                    .size(30.sdp)
+                    .clickable {
+                        /*  scope.launch {
+                              if (drawerState.isClosed) {
+                                  drawerState.open()
+                              }
+                          }*/
+                    },
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.sdp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Box(
+                Modifier
+                    .clip(RoundedCornerShape(8.sdp))
+                    .clickable {
+                        viewModel.toggleSortBy(1)
+                    }
+                    .background(color = if (uiStates.selectedSortBy == 1) MaterialTheme.colorScheme.secondary else Color.Transparent)
+                    .padding(8.sdp)
+
+            ) {
+                Text(
+                    text = "Relevancy",
+                    fontSize = MaterialTheme.typography.labelSmall.fontSize,
+                    color = if (uiStates.selectedSortBy == 1) MaterialTheme.colorScheme.onSecondary else Color.Black
+                )
+            }
+            Box(
+                Modifier
+                    .clip(RoundedCornerShape(8.sdp))
+                    .clickable {
+                        viewModel.toggleSortBy(2)
+
+                    }
+                    .background(color = if (uiStates.selectedSortBy == 2) MaterialTheme.colorScheme.secondary else Color.Transparent)
+                    .padding(8.sdp)
+
+            ) {
+                Text(
+                    text = "Popularity",
+                    fontSize = MaterialTheme.typography.labelSmall.fontSize,
+                    color = if (uiStates.selectedSortBy == 2) MaterialTheme.colorScheme.onSecondary else Color.Black
+                )
+            }
+            Box(
+                Modifier
+                    .clip(RoundedCornerShape(8.sdp))
+                    .clickable {
+                        viewModel.toggleSortBy(3)
+
+                    }
+                    .background(color = if (uiStates.selectedSortBy == 3) MaterialTheme.colorScheme.secondary else Color.Transparent)
+                    .padding(8.sdp)
+
+
+            ) {
+                Text(
+                    text = "PublishedAt",
+                    fontSize = MaterialTheme.typography.labelSmall.fontSize,
+                    color = if (uiStates.selectedSortBy == 3) MaterialTheme.colorScheme.onSecondary else Color.Black
+                )
+            }
+        }
+
+        ArticleList(uiStates.articlesList)
     }
 
 }

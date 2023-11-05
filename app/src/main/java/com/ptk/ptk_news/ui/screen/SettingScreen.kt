@@ -27,7 +27,7 @@ fun SettingScreen(
 
 
     LaunchedEffect(key1 = Unit) {
-        newsFeedViewModel.getNewsFeed()
+//        newsFeedViewModel.getNewsFeed()
     }
     SettingScreenContent(navController, uiStates.newsFeedList)
 

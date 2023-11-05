@@ -20,7 +20,7 @@ fun NavGraph(
     NavHost(
         modifier = Modifier.padding(bottom =scaffoldPaddingValue.dp),
         navController = navController,
-        startDestination = Routes.ProfileScreen.route
+        startDestination = Routes.NewsFeedScreen.route
     ) {
         composable(route = Routes.NewsFeedScreen.route) {
             NewsFeedScreen(navController)

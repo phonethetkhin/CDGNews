@@ -9,4 +9,7 @@ data class ProfileUIStates(
     val availableTextSize: List<String> = listOf("S", "M", "L"),
     val selectedTextSize: String = "M"
 
+
+
+
 )

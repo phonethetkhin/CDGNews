@@ -25,7 +25,7 @@ data class NewsFeedUIStates(
         CategoryModel(id = 7, name = "technology"),
     ),
 
-    val selectedCountry: String = "us",
+    val selectedCountry: String = "United States",
     val availableCountries: List<CountryModel> = getCountriesList(),
 
     val source: String = "",
@@ -34,6 +34,4 @@ data class NewsFeedUIStates(
 
     val searchText: String = "",
 
-
-    val articlesList: List<ArticlesItem> = listOf(),
-)
+    )

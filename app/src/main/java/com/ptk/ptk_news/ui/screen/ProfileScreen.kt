@@ -2,6 +2,7 @@
 
 package com.ptk.ptk_news.ui.screen
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,63 +21,143 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.ptk.ptk_news.MainActivity
-import com.ptk.ptk_news.ui.ui_resource.composables.MyButton
+import com.ptk.ptk_news.ui.ui_resource.composables.DrawerContent
 import com.ptk.ptk_news.ui.ui_resource.theme.Blue
 import com.ptk.ptk_news.ui.ui_resource.theme.Orange
 import com.ptk.ptk_news.ui.ui_resource.theme.Purple
 import com.ptk.ptk_news.ui.ui_resource.theme.Yellow
 import com.ptk.ptk_news.ui.ui_states.ProfileUIStates
 import com.ptk.ptk_news.util.getComponentActivity
+import com.ptk.ptk_news.viewmodel.NewsFeedViewModel
 import com.ptk.ptk_news.viewmodel.ProfileViewModel
 import ir.kaaveh.sdpcompose.sdp
+import kotlinx.coroutines.launch
 
 
 //UIs
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun ProfileScreen(
     navController: NavController,
     profileViewModel: ProfileViewModel = hiltViewModel(),
-
-    ) {
+    newsFeedViewModel: NewsFeedViewModel = hiltViewModel(),
+) {
 
     LaunchedEffect(Unit) {
         val themeId = profileViewModel.getThemeId() ?: 1
         profileViewModel.toggleThemeId(themeId)
+
+        val textSizeId = profileViewModel.getTextSizeId() ?: 2
+        val textSizeString = when (textSizeId) {
+            1 -> "S"
+            2 -> "M"
+            3 -> "L"
+            else -> "M"
+        }
+        profileViewModel.toggleSelectedTextSizeString(textSizeString)
     }
     val context = LocalContext.current
     val activity = context.getComponentActivity() as MainActivity
 
     val uiStates by profileViewModel.uiStates.collectAsState()
+    val newsFeedUIStates by newsFeedViewModel.uiStates.collectAsState()
 
-    ProfileScreenContent(uiStates, profileViewModel, activity)
+    profileViewModel._newsFeedUIStates = newsFeedViewModel._uiStates
 
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val coroutineScope = rememberCoroutineScope()
+    if (drawerState.isClosed) {
+        newsFeedViewModel.resetSelectedValue()
+    }
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+        ModalNavigationDrawer(
+            drawerState = drawerState,
+            drawerContent = {
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                    ModalDrawerSheet(
+                        modifier = Modifier
+                            .then(
+                                if (drawerState.targetValue == DrawerValue.Open) Modifier.fillMaxSize() else Modifier
+                            )
+                    ) {
+                        DrawerContent(
+                            newsFeedUIStates, newsFeedViewModel, onDismiss = {
+                                if (drawerState.isOpen) {
+                                    coroutineScope.launch {
+                                        drawerState.close()
+                                    }
+                                }
+                                newsFeedViewModel.resetSelectedValue()
 
+                            }
+                        ) {
+
+                            coroutineScope.launch {
+                                profileViewModel.savePreferredSetting()
+                                if (drawerState.isOpen) {
+                                    coroutineScope.launch {
+                                        drawerState.close()
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+        ) {
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+
+                Scaffold() {
+
+                    ProfileScreenContent(uiStates, profileViewModel, activity) {
+                        if (drawerState.isClosed) {
+                            coroutineScope.launch {
+                                drawerState.open()
+                            }
+                        }
+                    }
+
+                }
+
+            }
+        }
+    }
 }
 
 @Composable
 fun ProfileScreenContent(
     uiStates: ProfileUIStates,
     viewModel: ProfileViewModel,
-    activity: MainActivity
+    activity: MainActivity,
+    onEditPreferredButtonClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier.fillMaxSize()
@@ -100,7 +181,7 @@ fun ProfileScreenContent(
                         },
                     text = "P",
                     color = Color.White,
-                    fontSize = MaterialTheme.typography.titleLarge.fontSize
+                    fontSize = MaterialTheme.typography.bodyLarge.fontSize
                 )
                 Spacer(modifier = Modifier.width(8.sdp))
                 Text(
@@ -124,12 +205,15 @@ fun ProfileScreenContent(
                 "Font Size",
                 fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                 color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(8.sdp)
+                modifier = Modifier.padding(top = 8.sdp, start = 8.sdp)
             )
-            TextSizeSelectionRow(uiStates = uiStates, viewModel = viewModel)
+            TextSizeSelectionRow(uiStates = uiStates, viewModel = viewModel, activity)
             Divider()
 
-            TextButton(onClick = {}, modifier = Modifier.align(Alignment.End)) {
+            TextButton(
+                onClick = { onEditPreferredButtonClick.invoke() },
+                modifier = Modifier.align(Alignment.End)
+            ) {
                 Text(
                     text = "Edit Preferred Filters",
                     fontSize = MaterialTheme.typography.bodyLarge.fontSize,
@@ -137,17 +221,6 @@ fun ProfileScreenContent(
                 )
             }
         }
-        MyButton(
-            text = "Save",
-            textColor = MaterialTheme.colorScheme.onPrimary,
-            buttonColor = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.primary),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.sdp)
-        ) {
-
-        }
-
     }
 }
 
@@ -250,12 +323,16 @@ fun ColorSelectionRow(
 }
 
 @Composable
-fun TextSizeSelectionRow(uiStates: ProfileUIStates, viewModel: ProfileViewModel) {
+fun TextSizeSelectionRow(
+    uiStates: ProfileUIStates,
+    viewModel: ProfileViewModel,
+    activity: MainActivity
+) {
     FlowRow(
 
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.sdp),
+            .padding(start = 4.sdp, top = 4.sdp, bottom = 8.sdp),
         horizontalArrangement = Arrangement.spacedBy(7.sdp),
     ) {
         uiStates.availableTextSize.forEach { textSizeString ->
@@ -266,7 +343,7 @@ fun TextSizeSelectionRow(uiStates: ProfileUIStates, viewModel: ProfileViewModel)
             val border = if (textSizeString == uiStates.selectedTextSize) 0.sdp else 1.sdp
             val alpha = if (textSizeString == uiStates.selectedTextSize) 1F else 0F
 
-            Row(modifier = Modifier
+            Row(verticalAlignment = CenterVertically, modifier = Modifier
                 .padding(top = 8.sdp)
                 .background(color = color, shape = CircleShape)
                 .border(
@@ -276,6 +353,8 @@ fun TextSizeSelectionRow(uiStates: ProfileUIStates, viewModel: ProfileViewModel)
                 )
                 .clickable {
                     viewModel.toggleSelectedTextSizeString(textSizeString)
+                    activity.recreate()
+
                 }
                 .padding(8.sdp)
             ) {

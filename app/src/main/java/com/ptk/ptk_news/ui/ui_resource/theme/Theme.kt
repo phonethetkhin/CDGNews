@@ -16,7 +16,6 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
-import ir.kaaveh.sdpcompose.ssp
 
 val DarkColorSchemeOrange = darkColorScheme(
     primary = LightOrange,
@@ -114,6 +113,7 @@ val LightColorSchemePurple = lightColorScheme(
 fun MyTheme(
     lightColorScheme: ColorScheme,
     darkColorScheme: ColorScheme,
+    typography: androidx.compose.material3.Typography,
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,
@@ -138,16 +138,11 @@ fun MyTheme(
                 darkTheme
         }
     }
-    val mediumTypography =
-        Typography.copy(
-            titleLarge = Typography.titleLarge.copy(fontSize = 18.ssp),
-            bodyLarge = Typography.bodyLarge.copy(fontSize = 14.ssp),
-            labelSmall = Typography.labelSmall.copy(fontSize = 9.ssp),
-        )
+
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = mediumTypography,
+        typography = typography,
         content = content
     )
 }

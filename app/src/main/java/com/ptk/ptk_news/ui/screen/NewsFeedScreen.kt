@@ -77,19 +77,28 @@ fun NewsFeedScreen(
     val uiStates by newsFeedViewModel.uiStates.collectAsState()
 
     LaunchedEffect(key1 = Unit) {
-        newsFeedViewModel.getSources()
-        newsFeedViewModel.getNewsFeed()
+        /* newsFeedViewModel.getSources()
+         newsFeedViewModel.getNewsFeed()*/
     }
 
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()
+
+    if (drawerState.isClosed) {
+        newsFeedViewModel.resetSelectedValue()
+    }
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         ModalNavigationDrawer(
             drawerState = drawerState,
             drawerContent = {
                 CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                    ModalDrawerSheet {
+                    ModalDrawerSheet(
+                        modifier = Modifier
+                            .then(
+                                if (drawerState.targetValue == DrawerValue.Open) Modifier.fillMaxSize() else Modifier
+                            ),
+                    ) {
                         DrawerContent(
                             uiStates, newsFeedViewModel, onDismiss = {
                                 if (drawerState.isOpen) {
@@ -97,10 +106,12 @@ fun NewsFeedScreen(
                                         drawerState.close()
                                     }
                                 }
+                                newsFeedViewModel.resetSelectedValue()
                             }
                         ) {
 
                             coroutineScope.launch {
+                                newsFeedViewModel.savePreferredSetting()
                                 newsFeedViewModel.getNewsFeed()
                                 if (drawerState.isOpen) {
                                     coroutineScope.launch {
@@ -116,23 +127,7 @@ fun NewsFeedScreen(
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
 
                 Scaffold() {
-                    // Screen content
-                    /*  if (uiStates.errorMessage.isNotEmpty()) {
-                          Column(
-                              verticalArrangement = Arrangement.Center,
-                              horizontalAlignment = Alignment.CenterHorizontally,
-                              modifier = Modifier.fillMaxSize()
-                          ) {
 
-                              Text(
-                                  text = uiStates.errorMessage,
-                                  fontSize = 16.ssp,
-                                  fontWeight = FontWeight.Bold,
-                                  color = Red,
-                                  modifier = Modifier.padding(16.sdp)
-                              )
-                          }
-                      } else {*/
                     NewsFeedScreenContent(
                         drawerState,
                         uiStates.newsFeedList,
@@ -176,21 +171,7 @@ fun NewsFeedScreenContent(
                 .fillMaxWidth()
                 .padding(8.sdp)
         ) {
-            Icon(
-                imageVector = Icons.Filled.FilterAlt,
-                contentDescription = "FilterIcon",
-                modifier = Modifier
-                    .size(25.sdp)
-                    .clickable {
-                        scope.launch {
-                            if (drawerState.isClosed) {
-                                drawerState.open()
-                            }
-                        }
-                    },
-                tint = MaterialTheme.colorScheme.primary
-            )
-            Spacer(modifier = Modifier.width(4.sdp))
+
             SearchView(
                 selectedText = uiStates.searchText,
                 onSearchValueChanged = viewModel::toggleSearchValueChange,
@@ -200,6 +181,22 @@ fun NewsFeedScreenContent(
                     viewModel.getNewsFeed()
                 }
             }
+            Spacer(modifier = Modifier.width(4.sdp))
+
+            Icon(
+                imageVector = Icons.Filled.FilterAlt,
+                contentDescription = "FilterIcon",
+                modifier = Modifier
+                    .size(30.sdp)
+                    .clickable {
+                        scope.launch {
+                            if (drawerState.isClosed) {
+                                drawerState.open()
+                            }
+                        }
+                    },
+                tint = MaterialTheme.colorScheme.primary
+            )
         }
 
 
