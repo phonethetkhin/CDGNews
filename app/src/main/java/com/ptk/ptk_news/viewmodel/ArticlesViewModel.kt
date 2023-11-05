@@ -5,7 +5,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ptk.ptk_news.db.entity.SourceEntity
-import com.ptk.ptk_news.repository.NewsFeedRepository
+import com.ptk.ptk_news.repository.ArticleRepository
 import com.ptk.ptk_news.ui.ui_states.ArticlesUIStates
 import com.ptk.ptk_news.util.datastore.MyDataStore
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,7 +19,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ArticlesViewModel @Inject constructor(
-    private val repository: NewsFeedRepository,
+    private val repository: ArticleRepository,
     private val context: Application,
     private val dataStore: MyDataStore,
 
@@ -148,34 +148,44 @@ class ArticlesViewModel @Inject constructor(
         Log.e("requestModel1", query.toString())
         Log.e("requestModel2", sources.toString())
         Log.e("requestModel3", sortBy.toString())
+        val articlesList = repository.getAllNewsFeedsArticles()
+        _uiStates.update {
+            it.copy(
+                showLoadingDialog = false,
+                articlesList = articlesList
+            )
+        }
 
-        /* repository.getArticles(query, sources, "popularity", 1).collectLatest { remoteResource ->
-             when (remoteResource) {
-                 is RemoteResource.Loading -> _uiStates.update {
-                     it.copy(showLoadingDialog = true)
-                 }
+       /* repository.getArticles(query, sources, "popularity", 1).collectLatest { remoteResource ->
+            when (remoteResource) {
+                is RemoteResource.Loading -> _uiStates.update {
+                    it.copy(showLoadingDialog = true)
+                }
 
-                 is RemoteResource.Success -> {
-                     if (!remoteResource.data.articles.isNullOrEmpty()) {
-                         _uiStates.update {
-                             it.copy(
-                                 showLoadingDialog = false,
-                                 articlesList = remoteResource.data.articles
-                             )
-                         }
-                     }
-                 }
+                is RemoteResource.Success -> {
+                    if (!remoteResource.data.articles.isNullOrEmpty()) {
+                        repository.insertArticles(remoteResource.data.articles.onEach {
+                            it.isHeadLine = false
+                        })
+                        _uiStates.update {
+                            it.copy(
+                                showLoadingDialog = false,
+                                articlesList = remoteResource.data.articles
+                            )
+                        }
+                    }
+                }
 
-                 is RemoteResource.Failure -> {
-                     _uiStates.update {
-                         it.copy(
-                             showLoadingDialog = false,
-                         )
-                     }
-                     context.showToast(remoteResource.errorMessage.toString())
-                 }
-             }
-         }*/
+                is RemoteResource.Failure -> {
+                    _uiStates.update {
+                        it.copy(
+                            showLoadingDialog = false,
+                        )
+                    }
+                    context.showToast(remoteResource.errorMessage.toString())
+                }
+            }
+        }*/
     }.await()
 
     //=======================================db function=========================================//

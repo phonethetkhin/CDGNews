@@ -12,7 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.ptk.ptk_news.model.dto.response.ArticlesItem
+import com.ptk.ptk_news.db.entity.ArticleEntity
 import com.ptk.ptk_news.viewmodel.NewsFeedViewModel
 
 
@@ -35,7 +35,7 @@ fun SettingScreen(
 }
 
 @Composable
-fun SettingScreenContent(navController: NavController, articleList: List<ArticlesItem>) {
+fun SettingScreenContent(navController: NavController, articleList: List<ArticleEntity>) {
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,

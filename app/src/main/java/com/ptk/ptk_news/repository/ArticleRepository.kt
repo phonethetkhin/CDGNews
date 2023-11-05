@@ -2,7 +2,9 @@ package com.ptk.ptk_news.repository
 
 import android.app.Application
 import com.ptk.ptk_news.R
+import com.ptk.ptk_news.db.dao.ArticleDao
 import com.ptk.ptk_news.db.dao.SourceDao
+import com.ptk.ptk_news.db.entity.ArticleEntity
 import com.ptk.ptk_news.model.RemoteResource
 import com.ptk.ptk_news.network.ApiService
 import io.ktor.network.sockets.ConnectTimeoutException
@@ -11,10 +13,11 @@ import kotlinx.coroutines.flow.channelFlow
 import javax.inject.Inject
 
 
-class NewsFeedRepository @Inject constructor(
+class ArticleRepository @Inject constructor(
     private val context: Application,
     private val apiService: ApiService,
     private val sourceDao: SourceDao,
+    private val articleDao: ArticleDao,
 ) {
     suspend fun getNewsFeed(
         country: String,
@@ -77,5 +80,13 @@ class NewsFeedRepository @Inject constructor(
     //=======================================db function======================================//
 
     suspend fun getAllSources() = sourceDao.getAllSources()
+
+    suspend fun insertArticles(articles: List<ArticleEntity>) =
+        articleDao.insertAllArticles(articles)
+
+    suspend fun getAllNewsFeedsArticles() = articleDao.getAllNewsFeedsArticles()
+
+    suspend fun getAllArticles() = articleDao.getAllArticles()
+
 
 }

@@ -73,7 +73,7 @@ class MyDataStore @Inject constructor(private val application: Application) {
 
     val preferredCountryId: Flow<Int?> = application.dataStore.data
         .map { preferences ->
-            preferences[PREFERRED_COUNTRY_ID] ?: 0
+            preferences[PREFERRED_COUNTRY_ID] ?: 53
         }
 
     suspend fun savePreferredCountryId(countryId: Int) {

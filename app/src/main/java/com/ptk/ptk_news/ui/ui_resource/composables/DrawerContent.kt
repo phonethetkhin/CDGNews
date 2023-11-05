@@ -2,7 +2,6 @@
 
 package com.ptk.ptk_news.ui.ui_resource.composables
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -58,7 +57,7 @@ fun DrawerContent(
     ) {
     LaunchedEffect(Unit) {
         val categoryId = viewModel.getPreferredCategory() ?: 0
-        val countryId = viewModel.getPreferredCountry()
+        val countryId = viewModel.getPreferredCountry() ?: 0
         val country =
             uiStates.availableCountries.find { it.id == countryId }?.name ?: "United States"
         val sources = viewModel.getPreferredSources()

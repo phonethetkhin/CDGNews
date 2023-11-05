@@ -28,5 +28,9 @@ object RoomDatabaseModule {
     @Provides
     fun providesSourceDao(db: PTKNewsDB) = db.getSourceDao()
 
+    @Singleton
+    @Provides
+    fun providesArticleDao(db: PTKNewsDB) = db.getArticleDao()
+
 
 }

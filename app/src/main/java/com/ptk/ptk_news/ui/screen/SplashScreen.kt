@@ -15,7 +15,9 @@ import com.ptk.ptk_news.MainActivity
 import com.ptk.ptk_news.ui.ui_resource.navigation.Routes
 import com.ptk.ptk_news.util.datastore.MyDataStore
 import com.ptk.ptk_news.util.getComponentActivity
+import com.ptk.ptk_news.viewmodel.ArticlesViewModel
 import com.ptk.ptk_news.viewmodel.HomeViewModel
+import com.ptk.ptk_news.viewmodel.NewsFeedViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 

@@ -7,6 +7,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.ptk.ptk_news.db.entity.ArticleEntity
 import com.ptk.ptk_news.ui.screen.ArticlesScreen
 import com.ptk.ptk_news.ui.screen.DetailScreen
 import com.ptk.ptk_news.ui.screen.LandingScreen
@@ -23,7 +24,7 @@ fun NavGraph(
     NavHost(
         modifier = Modifier.padding(bottom = scaffoldPaddingValue.dp),
         navController = navController,
-        startDestination = Routes.ProfileScreen.route
+        startDestination = Routes.NewsFeedScreen.route
     ) {
 
         composable(route = Routes.SplashScreen.route) {
@@ -41,7 +42,9 @@ fun NavGraph(
             ArticlesScreen(navController)
         }
         composable(route = Routes.DetailScreen.route) {
-            DetailScreen(navController)
+            val article = it.arguments?.getParcelable<ArticleEntity>("article")!!
+
+            DetailScreen(navController, article)
         }
         composable(route = Routes.SettingScreen.route) {
             SettingScreen(navController)

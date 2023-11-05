@@ -5,7 +5,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ptk.ptk_news.db.entity.SourceEntity
-import com.ptk.ptk_news.repository.NewsFeedRepository
+import com.ptk.ptk_news.repository.ArticleRepository
 import com.ptk.ptk_news.ui.ui_states.NewsFeedUIStates
 import com.ptk.ptk_news.util.datastore.MyDataStore
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,7 +19,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class NewsFeedViewModel @Inject constructor(
-    private val repository: NewsFeedRepository,
+    private val repository: ArticleRepository,
     private val context: Application,
     private val dataStore: MyDataStore,
 
@@ -144,7 +144,7 @@ class NewsFeedViewModel @Inject constructor(
     fun resetSelectedValue() {
         viewModelScope.launch {
             val categoryId = getPreferredCategory() ?: 0
-            val countryId = getPreferredCountry()
+            val countryId = getPreferredCountry() ?: 0
             val country =
                 _uiStates.value.availableCountries.find { it.id == countryId }?.name
                     ?: "United States"
@@ -191,12 +191,9 @@ class NewsFeedViewModel @Inject constructor(
     //=======================================api function=========================================//
     suspend fun getNewsFeed(pageNum: Int = 1) =
         viewModelScope.async {
-            var selectedCountry: String = ""
-            if (_uiStates.value.selectedCountry != "All Countries") {
-                selectedCountry = _uiStates.value.selectedCountry
-            }
+
             var country =
-                _uiStates.value.availableCountries.find { it.name == selectedCountry }?.code
+                _uiStates.value.availableCountries.find { it.name != "All Countries" && it.name == _uiStates.value.selectedCountry }?.code
                     ?: ""
             var category =
                 _uiStates.value.availableCategories.find { _uiStates.value.selectedCategory != 0 && it.id == _uiStates.value.selectedCategory }?.name
@@ -215,43 +212,51 @@ class NewsFeedViewModel @Inject constructor(
             Log.e("requestMessage2", category)
             Log.e("requestMessage3", sources)
             Log.e("requestMessage4", query)
+           val articlesList = repository.getAllNewsFeedsArticles()
+            _uiStates.update {
+                it.copy(
+                    showLoadingDialog = false,
+                    newsFeedList = articlesList
+                )
+            }
+           /* repository.getNewsFeed(country, category, sources, query, pageNum)
+                .collectLatest { remoteResource ->
+                    when (remoteResource) {
+                        is RemoteResource.Loading -> _uiStates.update {
+                            it.copy(showLoadingDialog = true)
+                        }
 
-            /* repository.getNewsFeed(country, category, sources, query, pageNum)
-                 .collectLatest { remoteResource ->
-                     when (remoteResource) {
-                         is RemoteResource.Loading -> _uiStates.update {
-                             it.copy(showLoadingDialog = true)
-                         }
+                        is RemoteResource.Success -> {
+                            if (!remoteResource.data.articles.isNullOrEmpty()) {
 
-                         is RemoteResource.Success -> {
-                             if (!remoteResource.data.articles.isNullOrEmpty()) {
-                                 _uiStates.update {
-                                     it.copy(
-                                         showLoadingDialog = false,
-                                         newsFeedList = remoteResource.data.articles
-                                     )
-                                 }
-                             } else {
-                                 _uiStates.update {
-                                     it.copy(
-                                         showLoadingDialog = false,
-                                         errorMessage = "No Relevant Data"
-                                     )
-                                 }
-                             }
-                         }
+                                repository.insertArticles(remoteResource.data.articles.onEach { it.isHeadLine = true })
+                                _uiStates.update {
+                                    it.copy(
+                                        showLoadingDialog = false,
+                                        newsFeedList = remoteResource.data.articles
+                                    )
+                                }
+                            } else {
+                                _uiStates.update {
+                                    it.copy(
+                                        showLoadingDialog = false,
+                                        errorMessage = "No Relevant Data"
+                                    )
+                                }
+                            }
+                        }
 
-                         is RemoteResource.Failure -> {
-                             _uiStates.update {
-                                 it.copy(
-                                     showLoadingDialog = false,
-                                     errorMessage = "${remoteResource.errorMessage}"
-                                 )
-                             }
-                             context.showToast(remoteResource.errorMessage.toString())
-                         }
-                     }
-                 }*/
+                        is RemoteResource.Failure -> {
+                            _uiStates.update {
+                                it.copy(
+                                    showLoadingDialog = false,
+                                    errorMessage = "${remoteResource.errorMessage}"
+                                )
+                            }
+                            context.showToast(remoteResource.errorMessage.toString())
+                        }
+                    }
+                }*/
         }.await()
 
     //=======================================db function=========================================//
@@ -260,7 +265,7 @@ class NewsFeedViewModel @Inject constructor(
         val dbSources = repository.getAllSources()
         _uiStates.update { it.copy(availableSources = dbSources) }
         val categoryId = getPreferredCategory() ?: 0
-        val countryId = getPreferredCountry()
+        val countryId = getPreferredCountry() ?: 0
         val country =
             _uiStates.value.availableCountries.find { it.id == countryId }?.name ?: "United States"
         if (_uiStates.value.availableSources.isNotEmpty()) {

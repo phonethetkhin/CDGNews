@@ -1,7 +1,7 @@
 package com.ptk.ptk_news.ui.ui_states
 
+import com.ptk.ptk_news.db.entity.ArticleEntity
 import com.ptk.ptk_news.db.entity.SourceEntity
-import com.ptk.ptk_news.model.dto.response.ArticlesItem
 
 
 data class ArticlesUIStates(
@@ -14,11 +14,11 @@ data class ArticlesUIStates(
     val sourceSuggestions: ArrayList<String> = arrayListOf(),
     val availableSources: List<SourceEntity> = listOf(),
 
-    val searchText: String = "",
+    val searchText: String = "trending",
     val selectedSortBy: Int = 1,
 
     val isShowFilterDialog: Boolean = false,
 
 
-    val articlesList: List<ArticlesItem> = listOf(),
+    val articlesList: List<ArticleEntity> = listOf(),
 )

@@ -39,15 +39,18 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.core.os.bundleOf
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.ptk.ptk_news.R
-import com.ptk.ptk_news.model.dto.response.ArticlesItem
+import com.ptk.ptk_news.db.entity.ArticleEntity
 import com.ptk.ptk_news.ui.ui_resource.composables.FilterSourceDialog
 import com.ptk.ptk_news.ui.ui_resource.composables.SearchView
+import com.ptk.ptk_news.ui.ui_resource.navigation.Routes
 import com.ptk.ptk_news.ui.ui_states.ArticlesUIStates
+import com.ptk.ptk_news.util.navigate
 import com.ptk.ptk_news.viewmodel.ArticlesViewModel
 import ir.kaaveh.sdpcompose.sdp
 import ir.kaaveh.sdpcompose.ssp
@@ -67,9 +70,10 @@ fun ArticlesScreen(
     LaunchedEffect(key1 = Unit) {
 
         articlesViewModel.getAllSources()
+        articlesViewModel.getArticles()
 
     }
-    ArticlesScreenContent(uiStates, articlesViewModel)
+    ArticlesScreenContent(navController,uiStates, articlesViewModel)
 
     val scope = rememberCoroutineScope()
     FilterSourceDialog(
@@ -91,6 +95,7 @@ fun ArticlesScreen(
 
 @Composable
 fun ArticlesScreenContent(
+    navController: NavController,
     uiStates: ArticlesUIStates,
     viewModel: ArticlesViewModel,
 ) {
@@ -198,31 +203,37 @@ fun ArticlesScreenContent(
             }
         }
 
-        ArticleList(uiStates.articlesList)
+        ArticleList(navController, uiStates.articlesList)
     }
 
 }
 
 @Composable
-fun ColumnScope.ArticleList(articleList: List<ArticlesItem>) {
+fun ColumnScope.ArticleList(navController: NavController, articleList: List<ArticleEntity>) {
     LazyColumn(
         modifier = Modifier
             .weight(1F)
             .padding(8.sdp)
     ) {
         items(articleList) {
-            ArticleListItem(it)
+            ArticleListItem(navController, it)
             Divider()
         }
     }
 }
 
 @Composable
-fun ArticleListItem(article: ArticlesItem) {
+fun ArticleListItem(navController: NavController, article: ArticleEntity) {
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(vertical = 8.sdp)
+        modifier = Modifier.padding(vertical = 8.sdp).clickable {
+            navController.navigate(
+                route = Routes.DetailScreen.route, args = bundleOf(
+                    "article" to article
+                )
+            )
+        }
     ) {
         Spacer(modifier = Modifier.width(8.sdp))
 
