@@ -18,7 +18,7 @@ class HomeRepository @Inject constructor(
     private val sourceDao: SourceDao
 
 ) {
-    //=======================================api function======================================//
+    //=======================================API functions========================================//
 
     suspend fun getSources() = channelFlow {
         send(RemoteResource.Loading)
@@ -44,8 +44,9 @@ class HomeRepository @Inject constructor(
         }
     }
 
-    //=======================================api function======================================//
+    //=======================================DB functions=========================================//
 
-    suspend fun insertAllDao(sources: List<SourceEntity>) = sourceDao.insertAllSources(sources)
+    suspend fun insertAllSourcesDB(sources: List<SourceEntity>) =
+        sourceDao.insertAllSources(sources)
 
 }

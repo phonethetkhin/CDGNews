@@ -10,7 +10,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 @Entity(tableName = "tbl_article")
-
 data class ArticleEntity(
 
     @ColumnInfo(name = "publishedAt")
@@ -48,7 +47,6 @@ data class ArticleEntity(
     var isFav: Boolean = false,
 
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
-
     ) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readString(),

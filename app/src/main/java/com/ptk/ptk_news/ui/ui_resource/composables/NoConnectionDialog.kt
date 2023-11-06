@@ -52,16 +52,12 @@ fun NoConnectionDialog(
             properties = DialogProperties(
                 dismissOnBackPress = dismissOnBackPress,
                 dismissOnClickOutside = dismissOnTouchOutSide
-            ), onDismissRequest = { onDismissRequest.invoke() }) {
+            ),
+            onDismissRequest = { onDismissRequest.invoke() }) {
 
-            Card(
-
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(16.sdp)
-                ) {
-                    if(!isRetry) {
+            Card {
+                Column(modifier = Modifier.padding(16.sdp)) {
+                    if (!isRetry) {
                         Icon(
                             imageVector = Icons.Filled.Close,
                             contentDescription = "Close Icon",
@@ -78,6 +74,7 @@ fun NoConnectionDialog(
                         )
                         Spacer(modifier = Modifier.height(16.sdp))
                     }
+
                     Text(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -93,6 +90,7 @@ fun NoConnectionDialog(
                     val composition by rememberLottieComposition(
                         spec = LottieCompositionSpec.RawRes(resId = R.raw.disconnected)
                     )
+
                     // render the animation
                     LottieAnimation(
                         modifier = Modifier
@@ -101,13 +99,16 @@ fun NoConnectionDialog(
                         iterations = LottieConstants.IterateForever // animate forever
 
                     )
+
                     Spacer(modifier = Modifier.height(16.sdp))
+
                     Text(
                         text = "Please check your internet connection",
                         fontSize = 11.ssp,
                         color = Color.Black,
                         textAlign = TextAlign.Center
                     )
+                    
                     Button(
                         modifier = Modifier
                             .fillMaxWidth()

@@ -38,6 +38,7 @@ class MyDataStore @Inject constructor(private val application: Application) {
         }
     }
 
+
     val themeId: Flow<Int?> = application.dataStore.data
         .map { preferences ->
             preferences[THEME_ID] ?: 1
@@ -48,6 +49,7 @@ class MyDataStore @Inject constructor(private val application: Application) {
             preferences[THEME_ID] = themeId
         }
     }
+
 
     val textSizeId: Flow<Int?> = application.dataStore.data
         .map { preferences ->
@@ -60,6 +62,7 @@ class MyDataStore @Inject constructor(private val application: Application) {
         }
     }
 
+
     val preferredCategoryId: Flow<Int?> = application.dataStore.data
         .map { preferences ->
             preferences[PREFERRED_CATEGORY_ID] ?: 0
@@ -71,6 +74,7 @@ class MyDataStore @Inject constructor(private val application: Application) {
         }
     }
 
+
     val preferredCountryId: Flow<Int?> = application.dataStore.data
         .map { preferences ->
             preferences[PREFERRED_COUNTRY_ID] ?: 53
@@ -81,6 +85,7 @@ class MyDataStore @Inject constructor(private val application: Application) {
             preferences[PREFERRED_COUNTRY_ID] = countryId
         }
     }
+
 
     val preferredSources: Flow<String?> = application.dataStore.data
         .map { preferences ->

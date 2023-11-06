@@ -8,21 +8,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
@@ -34,22 +28,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import com.ptk.ptk_news.ui.ui_resource.theme.Red
-import com.ptk.ptk_news.ui.ui_states.NewsFeedUIStates
+import com.ptk.ptk_news.ui.ui_states.ArticleUIStates
 import com.ptk.ptk_news.viewmodel.NewsFeedViewModel
 import ir.kaaveh.sdpcompose.sdp
 import kotlinx.coroutines.launch
 
 @Composable
 fun DrawerContent(
-    uiStates: NewsFeedUIStates,
+    uiStates: ArticleUIStates,
     viewModel: NewsFeedViewModel,
     onDismiss: () -> Unit,
     onSave: () -> Unit,
@@ -57,9 +48,11 @@ fun DrawerContent(
     ) {
     LaunchedEffect(Unit) {
         val categoryId = viewModel.getPreferredCategory() ?: 0
+
         val countryId = viewModel.getPreferredCountry() ?: 0
         val country =
             uiStates.availableCountries.find { it.id == countryId }?.name ?: "United States"
+
         val sources = viewModel.getPreferredSources()
 
         viewModel.toggleSelectedCategory(categoryId)
@@ -72,6 +65,7 @@ fun DrawerContent(
             }
         }
     }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -83,6 +77,7 @@ fun DrawerContent(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             val scope = rememberCoroutineScope()
+
             SwitchWithLabel(
                 label = "Filter By Sources?",
                 isFilterBySource = uiStates.isFilterBySource
@@ -91,6 +86,7 @@ fun DrawerContent(
                     viewModel.toggleSelectedFilterBySource(it)
                 }
             }
+
             Icon(
                 imageVector = Icons.Filled.Close,
                 contentDescription = "Close Icon",
@@ -106,8 +102,8 @@ fun DrawerContent(
                     }
             )
 
-
         }
+
         Divider(Modifier.padding(top = 8.sdp))
 
         if (uiStates.isFilterBySource) {
@@ -123,7 +119,7 @@ fun DrawerContent(
 
 @Composable
 fun FilterBySourceLayout(
-    uiStates: NewsFeedUIStates,
+    uiStates: ArticleUIStates,
     viewModel: NewsFeedViewModel,
     onSave: () -> Unit
 ) {
@@ -135,39 +131,7 @@ fun FilterBySourceLayout(
         modifier = Modifier.padding(8.sdp)
     )
     Spacer(modifier = Modifier.height(4.sdp))
-    FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(7.sdp),
-    ) {
-        uiStates.availableSources.filter { it.selected }.forEach { source ->
-
-            Row(modifier = Modifier
-                .padding(top = 8.sdp)
-                .background(color = MaterialTheme.colorScheme.primary, shape = CircleShape)
-                .clickable {
-                    viewModel.toggleSelectedSources(source.name!!)
-                }
-                .padding(8.sdp)
-            ) {
-                Text(
-                    text = source.name!!,
-                    fontSize = MaterialTheme.typography.labelSmall.fontSize,
-                    color = Color.White,
-                    modifier = Modifier
-                        .padding(horizontal = 8.sdp)
-
-                )
-                Icon(
-                    imageVector = Icons.Filled.Close,
-                    contentDescription = "DeleteIcon",
-                    modifier = Modifier
-                        .alpha(1F),
-                    tint = Color.White
-
-                )
-
-            }
-        }
-    }
+    SourceSelectionRow(uiStates = uiStates, viewModel = viewModel)
     Spacer(modifier = Modifier.height(8.sdp))
     OutlinedTextField(
         onValueChange = viewModel::toggleSource,
@@ -178,24 +142,8 @@ fun FilterBySourceLayout(
             .border(1.sdp, color = MaterialTheme.colorScheme.primary),
         value = uiStates.source,
     )
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(200.sdp)
-            .alpha(alpha = if (uiStates.sourceSuggestions.isNotEmpty()) 1F else 0F)
-            .padding(start = 16.sdp, end = 16.sdp)
-            .clip(RoundedCornerShape(bottomStart = 10.sdp, bottomEnd = 10.sdp))
-            .background(Color.LightGray),
-    ) {
-        items(uiStates.sourceSuggestions) {
-            Text(
-                it, modifier = Modifier
-                    .padding(start = 8.sdp, top = 8.sdp)
-                    .clickable { viewModel.toggleSelectedSources(it) }
-            )
-        }
+    SourceSuggestionList(uiStates = uiStates, viewModel = viewModel)
 
-    }
     Spacer(modifier = Modifier.height(16.sdp))
 
 
@@ -211,9 +159,10 @@ fun FilterBySourceLayout(
     }
 }
 
+
 @Composable
 fun FilterByCategoryLayout(
-    uiStates: NewsFeedUIStates,
+    uiStates: ArticleUIStates,
     viewModel: NewsFeedViewModel,
     onSave: () -> Unit
 
@@ -227,49 +176,7 @@ fun FilterByCategoryLayout(
         modifier = Modifier.padding(8.sdp)
     )
     Spacer(modifier = Modifier.height(4.sdp))
-    FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(7.sdp),
-    ) {
-        uiStates.availableCategories.forEach { category ->
-            val color =
-                if (category.id == uiStates.selectedCategory) MaterialTheme.colorScheme.primary else Color.Transparent
-            val textColor =
-                if (category.id == uiStates.selectedCategory) Color.White else Color.Black
-            val border = if (category.id == uiStates.selectedCategory) 0.sdp else 1.sdp
-            val alpha = if (category.id == uiStates.selectedCategory) 1F else 0F
-
-            Row(verticalAlignment = CenterVertically, modifier = Modifier
-                .padding(top = 8.sdp)
-                .background(color = color, shape = CircleShape)
-                .border(
-                    width = border,
-                    color = MaterialTheme.colorScheme.primary,
-                    shape = CircleShape
-                )
-                .clickable {
-                    viewModel.toggleSelectedCategory(category.id)
-                }
-                .padding(8.sdp)
-            ) {
-                Text(
-                    text = category.name,
-                    fontSize = MaterialTheme.typography.labelSmall.fontSize,
-                    color = textColor,
-                    modifier = Modifier
-                        .padding(horizontal = 8.sdp)
-
-                )
-                Icon(
-                    imageVector = Icons.Filled.CheckCircle,
-                    contentDescription = "CheckIcon",
-                    modifier = Modifier
-                        .alpha(alpha),
-                    tint = Color.White
-                )
-
-            }
-        }
-    }
+    CategorySelectionRow(uiStates = uiStates, viewModel = viewModel)
     Spacer(modifier = Modifier.height(16.sdp))
 
     Divider()
@@ -305,3 +212,4 @@ fun FilterByCategoryLayout(
 
     }
 }
+

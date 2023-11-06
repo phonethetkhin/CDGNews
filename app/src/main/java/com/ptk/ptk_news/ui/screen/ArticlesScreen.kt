@@ -50,15 +50,16 @@ import com.ptk.ptk_news.db.entity.ArticleEntity
 import com.ptk.ptk_news.ui.ui_resource.composables.CommentBoxDialog
 import com.ptk.ptk_news.ui.ui_resource.composables.FilterSourceDialog
 import com.ptk.ptk_news.ui.ui_resource.composables.NoConnectionDialog
+import com.ptk.ptk_news.ui.ui_resource.composables.ReactionBar
 import com.ptk.ptk_news.ui.ui_resource.composables.SearchView
 import com.ptk.ptk_news.ui.ui_resource.navigation.Routes
-import com.ptk.ptk_news.ui.ui_states.ArticlesUIStates
-import com.ptk.ptk_news.ui.ui_states.NewsFeedUIStates
+import com.ptk.ptk_news.ui.ui_states.ArticleUIStates
 import com.ptk.ptk_news.util.navigate
 import com.ptk.ptk_news.viewmodel.ArticlesViewModel
 import com.ptk.ptk_news.viewmodel.NewsFeedViewModel
 import ir.kaaveh.sdpcompose.sdp
 import ir.kaaveh.sdpcompose.ssp
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 
@@ -73,12 +74,10 @@ fun ArticlesScreen(
     val uiStates by articlesViewModel.uiStates.collectAsState()
     val newsFeedUIStates by newsFeedViewModel.uiStates.collectAsState()
 
-    articlesViewModel._newsFeedUIStates = newsFeedViewModel._uiStates
-
 
     LaunchedEffect(key1 = Unit) {
 
-        articlesViewModel.getAllSources()
+        articlesViewModel.getAllSourcesForArticle()
         articlesViewModel.getArticles()
 
     }
@@ -87,24 +86,25 @@ fun ArticlesScreen(
         uiStates,
         articlesViewModel,
         newsFeedViewModel,
-        newsFeedUIStates
     )
 
     val scope = rememberCoroutineScope()
+
     FilterSourceDialog(
         showDialog = uiStates.isShowFilterDialog,
         uiStates,
-        articlesViewModel,
+        newsFeedViewModel,
         onDismissRequest = {
-            articlesViewModel.resetSelectedValue()
+            articlesViewModel.resetSelectedValueForArticle()
             articlesViewModel.toggleIsShowFilterSourceDialog(false)
         }) {
         scope.launch {
-            articlesViewModel.savePreferredSetting()
+            articlesViewModel.savePreferredSettingForArticle()
             articlesViewModel.getArticles()
             articlesViewModel.toggleIsShowFilterSourceDialog(false)
         }
     }
+
     if (uiStates.showLoadingDialog) {
         Column(
             verticalArrangement = Arrangement.Center,
@@ -119,9 +119,7 @@ fun ArticlesScreen(
         showDialog = newsFeedUIStates.showCommentDialog,
         newsFeedViewModel,
         newsFeedUIStates,
-        onDismissRequest = { newsFeedViewModel.toggleCommentBoxDialog(false, 0) }) {
-
-    }
+        onDismissRequest = { newsFeedViewModel.toggleCommentBoxDialog(false, 0) })
 
     NoConnectionDialog(
         showDialog = newsFeedUIStates.isShowDisconnectedDialog,
@@ -131,10 +129,9 @@ fun ArticlesScreen(
 @Composable
 fun ArticlesScreenContent(
     navController: NavController,
-    uiStates: ArticlesUIStates,
+    uiStates: ArticleUIStates,
     viewModel: ArticlesViewModel,
     newsFeedViewModel: NewsFeedViewModel,
-    newsFeedUIStates: NewsFeedUIStates,
 ) {
     val scope = rememberCoroutineScope()
     Column(
@@ -173,76 +170,83 @@ fun ArticlesScreenContent(
             )
         }
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.sdp),
-            horizontalArrangement = Arrangement.SpaceBetween
+        SortByRow(uiStates = uiStates, viewModel = viewModel, scope = scope)
+        ArticleList(
+            navController,
+            uiStates.articlesList,
+            viewModel,
+            newsFeedViewModel
+        )
+    }
+
+}
+
+@Composable
+fun SortByRow(uiStates: ArticleUIStates, viewModel: ArticlesViewModel, scope: CoroutineScope) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.sdp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+
+        CustomSortByBox(
+            color = if (uiStates.selectedSortBy == 1) MaterialTheme.colorScheme.secondary else Color.Transparent,
+            text = "Relevancy",
+            textColor =
+            if (uiStates.selectedSortBy == 1) MaterialTheme.colorScheme.onSecondary else Color.Black
         ) {
-            Box(
-                Modifier
-                    .clip(RoundedCornerShape(8.sdp))
-                    .clickable {
-                        viewModel.toggleSortBy(1)
-                        scope.launch {
-                            viewModel.getArticles()
-                        }
-                    }
-                    .background(color = if (uiStates.selectedSortBy == 1) MaterialTheme.colorScheme.secondary else Color.Transparent)
-                    .padding(8.sdp)
-
-            ) {
-                Text(
-                    text = "Relevancy",
-                    fontSize = MaterialTheme.typography.labelSmall.fontSize,
-                    color = if (uiStates.selectedSortBy == 1) MaterialTheme.colorScheme.onSecondary else Color.Black
-                )
-            }
-            Box(
-                Modifier
-                    .clip(RoundedCornerShape(8.sdp))
-                    .clickable {
-                        viewModel.toggleSortBy(2)
-                        scope.launch {
-                            viewModel.getArticles()
-                        }
-
-                    }
-                    .background(color = if (uiStates.selectedSortBy == 2) MaterialTheme.colorScheme.secondary else Color.Transparent)
-                    .padding(8.sdp)
-
-            ) {
-                Text(
-                    text = "Popularity",
-                    fontSize = MaterialTheme.typography.labelSmall.fontSize,
-                    color = if (uiStates.selectedSortBy == 2) MaterialTheme.colorScheme.onSecondary else Color.Black
-                )
-            }
-            Box(
-                Modifier
-                    .clip(RoundedCornerShape(8.sdp))
-                    .clickable {
-                        viewModel.toggleSortBy(3)
-                        scope.launch {
-                            viewModel.getArticles()
-                        }
-                    }
-                    .background(color = if (uiStates.selectedSortBy == 3) MaterialTheme.colorScheme.secondary else Color.Transparent)
-                    .padding(8.sdp)
-
-
-            ) {
-                Text(
-                    text = "PublishedAt",
-                    fontSize = MaterialTheme.typography.labelSmall.fontSize,
-                    color = if (uiStates.selectedSortBy == 3) MaterialTheme.colorScheme.onSecondary else Color.Black
-                )
+            viewModel.toggleSortBy(1)
+            scope.launch {
+                viewModel.getArticles()
             }
         }
 
-        ArticleList(navController, uiStates.articlesList,viewModel, newsFeedViewModel, newsFeedUIStates)
-    }
+        CustomSortByBox(
+            color = if (uiStates.selectedSortBy == 2) MaterialTheme.colorScheme.secondary else Color.Transparent,
+            text = "Popularity",
+            textColor =
+            if (uiStates.selectedSortBy == 2) MaterialTheme.colorScheme.onSecondary else Color.Black
+        ) {
+            viewModel.toggleSortBy(2)
+            scope.launch {
+                viewModel.getArticles()
+            }
+        }
 
+        CustomSortByBox(
+            color = if (uiStates.selectedSortBy == 3) MaterialTheme.colorScheme.secondary else Color.Transparent,
+            text = "PublishedAt",
+            textColor =
+            if (uiStates.selectedSortBy == 3) MaterialTheme.colorScheme.onSecondary else Color.Black
+        ) {
+            viewModel.toggleSortBy(3)
+            scope.launch {
+                viewModel.getArticles()
+            }
+        }
+    }
+}
+
+@Composable
+fun CustomSortByBox(color: Color, text: String, textColor: Color, onclick: () -> Unit) {
+    Box(
+        Modifier
+            .clip(RoundedCornerShape(8.sdp))
+            .clickable {
+                onclick.invoke()
+            }
+            .background(color = color)
+            .padding(8.sdp)
+
+
+    ) {
+        Text(
+            text = text,
+            fontSize = MaterialTheme.typography.labelSmall.fontSize,
+            color = textColor
+        )
+    }
 }
 
 @Composable
@@ -251,7 +255,6 @@ fun ColumnScope.ArticleList(
     articleList: List<ArticleEntity>,
     articlesViewModel: ArticlesViewModel,
     newsFeedViewModel: NewsFeedViewModel,
-    newsFeedUIStates: NewsFeedUIStates,
 ) {
     LazyColumn(
         modifier = Modifier
@@ -259,15 +262,22 @@ fun ColumnScope.ArticleList(
             .padding(8.sdp)
     ) {
         items(articleList) {
-            ArticleListItem(navController, it,articlesViewModel, newsFeedViewModel, newsFeedUIStates)
+            ArticleListItem(
+                navController,
+                it,
+                articlesViewModel,
+                newsFeedViewModel
+            )
         }
     }
 }
 
 @Composable
 fun ArticleListItem(
-    navController: NavController, article: ArticleEntity,articlesViewModel: ArticlesViewModel, newsFeedViewModel: NewsFeedViewModel,
-    newsFeedUIStates: NewsFeedUIStates,
+    navController: NavController,
+    article: ArticleEntity,
+    articlesViewModel: ArticlesViewModel,
+    newsFeedViewModel: NewsFeedViewModel,
 ) {
 
     Row(
@@ -305,7 +315,8 @@ fun ArticleListItem(
         )
 
     }
-    ReactionBar(viewModel = newsFeedViewModel, articleEntity = article, articlesViewModel = articlesViewModel, uiStates = newsFeedUIStates)
+    ReactionBar(viewModel = newsFeedViewModel, articlesViewModel, article)
+
     Divider()
 
 }

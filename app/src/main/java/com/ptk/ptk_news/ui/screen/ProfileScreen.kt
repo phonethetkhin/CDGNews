@@ -3,7 +3,6 @@
 package com.ptk.ptk_news.ui.screen
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -71,16 +70,20 @@ fun ProfileScreen(
     profileViewModel: ProfileViewModel = hiltViewModel(),
     newsFeedViewModel: NewsFeedViewModel = hiltViewModel(),
 ) {
-    val uiStates by profileViewModel.uiStates.collectAsState()
+    val uiStates by profileViewModel.profileUIStates.collectAsState()
     val newsFeedUIStates by newsFeedViewModel.uiStates.collectAsState()
-    profileViewModel._newsFeedUIStates = newsFeedViewModel._uiStates
 
+    val context = LocalContext.current
+    val activity = context.getComponentActivity() as MainActivity
+
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         val themeId = profileViewModel.getThemeId() ?: 1
         profileViewModel.toggleThemeId(themeId)
-        newsFeedViewModel.getAllSources()
 
+        newsFeedViewModel.getAllSources()
 
 
         val textSizeId = profileViewModel.getTextSizeId() ?: 2
@@ -92,28 +95,25 @@ fun ProfileScreen(
         }
         profileViewModel.toggleSelectedTextSizeString(textSizeString)
     }
-    val context = LocalContext.current
-    val activity = context.getComponentActivity() as MainActivity
 
 
-
-
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val coroutineScope = rememberCoroutineScope()
     if (drawerState.isClosed) {
         newsFeedViewModel.resetSelectedValue()
     }
+
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         ModalNavigationDrawer(
             drawerState = drawerState,
             drawerContent = {
                 CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+
                     ModalDrawerSheet(
                         modifier = Modifier
                             .then(
                                 if (drawerState.targetValue == DrawerValue.Open) Modifier.fillMaxSize() else Modifier
                             )
                     ) {
+
                         ProfileDrawerContent(
                             newsFeedUIStates, newsFeedViewModel, onDismiss = {
                                 if (drawerState.isOpen) {
@@ -167,33 +167,7 @@ fun ProfileScreenContent(
         modifier = Modifier.fillMaxSize()
     ) {
         Column(modifier = Modifier.weight(1F)) {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(start = 8.sdp, top = 8.sdp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                val color = MaterialTheme.colorScheme.primary
-                Text(
-                    modifier = Modifier
-                        .padding(16.sdp)
-                        .drawBehind {
-                            drawCircle(
-                                color = color,
-                                radius = this.size.maxDimension
-                            )
-                        },
-                    text = "P",
-                    color = Color.White,
-                    fontSize = MaterialTheme.typography.bodyLarge.fontSize
-                )
-                Spacer(modifier = Modifier.width(8.sdp))
-                Text(
-                    text = "Phone Thet Khine",
-                    fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                    color = Color.Black
-                )
-            }
+            NameRow()
             Divider(modifier = Modifier.fillMaxWidth())
             Text(
                 "Theme Color",
@@ -211,7 +185,9 @@ fun ProfileScreenContent(
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(top = 8.sdp, start = 8.sdp)
             )
+
             TextSizeSelectionRow(uiStates = uiStates, viewModel = viewModel, activity)
+
             Divider()
 
             TextButton(
@@ -229,6 +205,37 @@ fun ProfileScreenContent(
 }
 
 @Composable
+fun NameRow() {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(start = 8.sdp, top = 8.sdp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        val color = MaterialTheme.colorScheme.primary
+        Text(
+            modifier = Modifier
+                .padding(16.sdp)
+                .drawBehind {
+                    drawCircle(
+                        color = color,
+                        radius = this.size.maxDimension
+                    )
+                },
+            text = "P",
+            color = Color.White,
+            fontSize = MaterialTheme.typography.bodyLarge.fontSize
+        )
+        Spacer(modifier = Modifier.width(8.sdp))
+        Text(
+            text = "Phone Thet Khine",
+            fontSize = MaterialTheme.typography.titleLarge.fontSize,
+            color = Color.Black
+        )
+    }
+}
+
+@Composable
 fun ColorSelectionRow(
     uiStates: ProfileUIStates,
     viewModel: ProfileViewModel,
@@ -241,88 +248,71 @@ fun ColorSelectionRow(
             .fillMaxWidth()
             .padding(8.sdp)
     ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .background(Blue)
-                .size(50.sdp)
-                .clickable {
-                    viewModel.toggleThemeId(1)
-                    activity.recreate()
-                }
+
+        ColorBox(
+            color = Blue,
+            alpha = if (uiStates.themeId == 1) 1F else 0F,
+            checkTint = Color.White
         ) {
-            Icon(
-                imageVector = Icons.Filled.CheckCircle,
-                contentDescription = "CheckIcon",
-                tint = Color.White,
-                modifier = Modifier
-                    .size(25.sdp)
-                    .alpha(alpha = if (uiStates.themeId == 1) 1F else 0F)
-
-            )
+            viewModel.toggleThemeId(1)
+            activity.recreate()
         }
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .background(Yellow)
-                .size(50.sdp)
-                .clickable {
-                    viewModel.toggleThemeId(2)
-                    activity.recreate()
 
-                }
+        ColorBox(
+            color = Yellow,
+            alpha = if (uiStates.themeId == 2) 1F else 0F,
+            checkTint = Color.Black
         ) {
-            Icon(
-                imageVector = Icons.Filled.CheckCircle,
-                contentDescription = "CheckIcon",
-                tint = Color.Black,
-                modifier = Modifier
-                    .size(25.sdp)
-                    .alpha(alpha = if (uiStates.themeId == 2) 1F else 0F)
-
-            )
+            viewModel.toggleThemeId(2)
+            activity.recreate()
         }
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .background(Orange)
-                .size(50.sdp)
-                .clickable {
-                    viewModel.toggleThemeId(3)
-                    activity.recreate()
 
-                }
+        ColorBox(
+            color = Orange,
+            alpha = if (uiStates.themeId == 3) 1F else 0F,
+            checkTint = Color.White
         ) {
-            Icon(
-                imageVector = Icons.Filled.CheckCircle,
-                contentDescription = "CheckIcon",
-                tint = Color.White,
-                modifier = Modifier
-                    .size(25.sdp)
-                    .alpha(alpha = if (uiStates.themeId == 3) 1F else 0F)
-            )
+            viewModel.toggleThemeId(3)
+            activity.recreate()
         }
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .background(Purple)
-                .size(50.sdp)
-                .clickable {
-                    viewModel.toggleThemeId(4)
-                    activity.recreate()
 
-                }
+        ColorBox(
+            color = Purple,
+            alpha = if (uiStates.themeId == 4) 1F else 0F,
+            checkTint = Color.White
         ) {
-            Icon(
-                imageVector = Icons.Filled.CheckCircle,
-                contentDescription = "CheckIcon",
-                tint = Color.White,
-                modifier = Modifier
-                    .size(25.sdp)
-                    .alpha(alpha = if (uiStates.themeId == 4) 1F else 0F)
-
-            )
+            viewModel.toggleThemeId(4)
+            activity.recreate()
         }
+    }
+}
+
+@Composable
+fun ColorBox(
+    color: Color,
+    alpha: Float,
+    checkTint: Color,
+    onclick: () -> Unit
+) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .background(color)
+            .size(50.sdp)
+            .clickable {
+                onclick.invoke()
+
+            }
+    ) {
+        Icon(
+            imageVector = Icons.Filled.CheckCircle,
+            contentDescription = "ColorBox",
+            tint = checkTint,
+            modifier = Modifier
+                .size(25.sdp)
+                .alpha(alpha = alpha)
+
+        )
     }
 }
 
@@ -340,46 +330,55 @@ fun TextSizeSelectionRow(
         horizontalArrangement = Arrangement.spacedBy(7.sdp),
     ) {
         uiStates.availableTextSize.forEach { textSizeString ->
-            val color =
-                if (textSizeString == uiStates.selectedTextSize) MaterialTheme.colorScheme.primary else Color.Transparent
-            val textColor =
-                if (textSizeString == uiStates.selectedTextSize) Color.White else Color.Black
-            val border = if (textSizeString == uiStates.selectedTextSize) 0.sdp else 1.sdp
-            val alpha = if (textSizeString == uiStates.selectedTextSize) 1F else 0F
 
-            Row(verticalAlignment = CenterVertically, modifier = Modifier
-                .padding(top = 8.sdp)
-                .background(color = color, shape = CircleShape)
-                .border(
-                    width = border,
-                    color = MaterialTheme.colorScheme.primary,
-                    shape = CircleShape
-                )
-                .clickable {
-                    viewModel.toggleSelectedTextSizeString(textSizeString)
-                    activity.recreate()
 
-                }
-                .padding(8.sdp)
-            ) {
-                Text(
-                    text = textSizeString,
-                    fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                    color = textColor,
-                    modifier = Modifier
-                        .padding(horizontal = 8.sdp)
-
-                )
-                Icon(
-                    imageVector = Icons.Filled.CheckCircle,
-                    contentDescription = "CheckIcon",
-                    modifier = Modifier
-                        .alpha(alpha),
-                    tint = Color.White
-                )
-
+            TextSizeListItem(textSizeString, uiStates) {
+                viewModel.toggleSelectedTextSizeString(textSizeString)
+                activity.recreate()
             }
         }
+    }
+}
+
+@Composable
+fun TextSizeListItem(textSizeString: String, uiStates: ProfileUIStates, onclick: () -> Unit) {
+    val color =
+        if (textSizeString == uiStates.selectedTextSize) MaterialTheme.colorScheme.primary else Color.Transparent
+    val textColor =
+        if (textSizeString == uiStates.selectedTextSize) Color.White else Color.Black
+    val border = if (textSizeString == uiStates.selectedTextSize) 0.sdp else 1.sdp
+    val alpha = if (textSizeString == uiStates.selectedTextSize) 1F else 0F
+
+    Row(verticalAlignment = CenterVertically, modifier = Modifier
+        .padding(top = 8.sdp)
+        .background(color = color, shape = CircleShape)
+        .border(
+            width = border,
+            color = MaterialTheme.colorScheme.primary,
+            shape = CircleShape
+        )
+        .clickable {
+            onclick.invoke()
+
+        }
+        .padding(8.sdp)
+    ) {
+        Text(
+            text = textSizeString,
+            fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+            color = textColor,
+            modifier = Modifier
+                .padding(horizontal = 8.sdp)
+
+        )
+        Icon(
+            imageVector = Icons.Filled.CheckCircle,
+            contentDescription = "CheckIcon",
+            modifier = Modifier
+                .alpha(alpha),
+            tint = Color.White
+        )
+
     }
 }
 

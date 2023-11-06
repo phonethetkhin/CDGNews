@@ -3,21 +3,14 @@ package com.ptk.ptk_news.viewmodel
 import android.app.Application
 import android.content.Context
 import android.net.ConnectivityManager
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ptk.ptk_news.db.entity.SourceEntity
 import com.ptk.ptk_news.model.RemoteResource
 import com.ptk.ptk_news.repository.ArticleRepository
-import com.ptk.ptk_news.ui.ui_states.ArticlesUIStates
-import com.ptk.ptk_news.ui.ui_states.NewsFeedUIStates
 import com.ptk.ptk_news.util.datastore.MyDataStore
 import com.ptk.ptk_news.util.showToast
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -28,18 +21,9 @@ class ArticlesViewModel @Inject constructor(
     private val context: Application,
     private val dataStore: MyDataStore,
 
-    ) : ViewModel() {
+    ) : BaseViewModel(repository, context, dataStore) {
 
-    val _uiStates = MutableStateFlow(ArticlesUIStates())
-    val uiStates = _uiStates.asStateFlow()
-
-    var _newsFeedUIStates = MutableStateFlow(NewsFeedUIStates())
-
-    //=======================================states function======================================//
-
-    fun toggleSearchValueChange(searchValue: String) {
-        _uiStates.update { it.copy(searchText = searchValue) }
-    }
+//=======================================States function======================================//
 
     fun toggleSortBy(sortBy: Int) {
         _uiStates.update { it.copy(selectedSortBy = sortBy) }
@@ -50,84 +34,13 @@ class ArticlesViewModel @Inject constructor(
         _uiStates.update { it.copy(isShowFilterDialog = isShowFilterSourceDialog) }
     }
 
-    fun toggleSource(source: String) {
-        _uiStates.update { it.copy(source = source) }
 
-        if (source.trim().isNotEmpty()) {
-            val suggestionsList = _uiStates.value.availableSources.filter {
-                it.name?.toLowerCase()?.contains(source.toLowerCase()) ?: false
-            }
-            if (suggestionsList.isNotEmpty()) {
-                _uiStates.update {
-                    it.copy(
-                        sourceSuggestions = suggestionsList.map { sugg -> sugg.name!! }
-                            .toCollection(ArrayList())
-                    )
-                }
-            } else {
-                _uiStates.update {
-                    it.copy(
-                        sourceSuggestions = arrayListOf()
-                    )
-                }
-            }
-        } else {
-            _uiStates.update {
-                it.copy(
-                    sourceSuggestions = arrayListOf()
-                )
-            }
-        }
+    suspend fun getBookMarkArticles() {
+        val bookMarkArticles = repository.getBookMarkArticleDB()
+        _uiStates.update { it.copy(bookMarkArticles = bookMarkArticles.toCollection(ArrayList())) }
     }
 
-    fun toggleSelectedSources(selectedSource: String) {
-        val selectedSourceItem = _uiStates.value.availableSources.find { it.name == selectedSource }
-        _uiStates.update { uiStates ->
-            uiStates.copy(
-                source = "",
-                sourceSuggestions = arrayListOf(),
-                availableSources = _uiStates.value.availableSources.mapIndexed { index, details ->
-                    if (_uiStates.value.availableSources.indexOf(_uiStates.value.availableSources.find { it.id == selectedSourceItem?.id }) == index) details.copy(
-                        selected = !details.selected
-                    )
-                    else details
-                } as ArrayList<SourceEntity>)
-        }
-    }
-
-    fun toggleInitialSelectedSources(selectedSource: String) {
-        val selectedSourceItem = _uiStates.value.availableSources.find { it.id == selectedSource }
-
-        _uiStates.update { uiStates ->
-            uiStates.copy(
-                source = "",
-                sourceSuggestions = arrayListOf(),
-                availableSources = _uiStates.value.availableSources.mapIndexed { index, details ->
-                    if (_uiStates.value.availableSources.indexOf(_uiStates.value.availableSources.find { it.id == selectedSourceItem?.id }) == index) details.copy(
-                        selected = true
-                    )
-                    else details
-                } as ArrayList<SourceEntity>)
-        }
-
-    }
-
-    fun resetSelectedValue() {
-        viewModelScope.launch {
-            if (_uiStates.value.availableSources.isNotEmpty()) {
-                val sources = getPreferredSources()
-                if (sources!!.isNotEmpty()) {
-                    val sourcesList = sources.split(",")
-
-                    sourcesList.forEach {
-                        toggleInitialSelectedSources(it)
-                    }
-                }
-            }
-        }
-    }
-
-    fun savePreferredSetting() {
+    fun savePreferredSettingForArticle() {
         viewModelScope.launch {
             val sources =
                 _uiStates.value.availableSources.filter { it.selected }.map { it.id }
@@ -137,13 +50,28 @@ class ArticlesViewModel @Inject constructor(
         }
     }
 
+    fun resetSelectedValueForArticle() {
+        viewModelScope.launch {
+
+            if (_uiStates.value.availableSources.isNotEmpty()) {
+                val sources = getPreferredSources()
+                if (sources!!.isNotEmpty()) {
+
+                    val sourcesList = sources.split(",")
+                    sourcesList.forEach {
+                        toggleInitialSelectedSources(it)
+                    }
+
+                }
+            }
+        }
+    }
 
     //=======================================api function=========================================//
 
     suspend fun getArticles() = viewModelScope.async {
         val connectivityManager =
             context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-
         val activeNetworkInfo = connectivityManager.getActiveNetworkInfo()
         val connected = activeNetworkInfo != null && activeNetworkInfo.isConnected()
 
@@ -160,7 +88,7 @@ class ArticlesViewModel @Inject constructor(
 
 
         if (connected) {
-            repository.getArticles(query, sources, "popularity", 1)
+            repository.getArticles(query, sources, sortBy, 1)
                 .collectLatest { remoteResource ->
                     when (remoteResource) {
                         is RemoteResource.Loading -> _uiStates.update {
@@ -169,9 +97,11 @@ class ArticlesViewModel @Inject constructor(
 
                         is RemoteResource.Success -> {
                             if (!remoteResource.data.articles.isNullOrEmpty()) {
-                                repository.insertArticles(remoteResource.data.articles.onEach {
+
+                                repository.insertArticlesDB(remoteResource.data.articles.onEach {
                                     it.isHeadLine = false
                                 })
+
                                 _uiStates.update {
                                     it.copy(
                                         showLoadingDialog = false,
@@ -192,9 +122,10 @@ class ArticlesViewModel @Inject constructor(
                     }
                 }
         } else {
-            val articlesList = repository.getAllArticles()
+            val articlesList = repository.getAllArticlesDB()
+
             if (articlesList.isEmpty()) {
-                _newsFeedUIStates.update { it.copy(isShowDisconnectedDialog = true) }
+                _uiStates.update { it.copy(isShowDisconnectedDialog = true) }
             } else {
                 _uiStates.update {
                     it.copy(
@@ -206,10 +137,11 @@ class ArticlesViewModel @Inject constructor(
         }
     }.await()
 
+
     //=======================================db function=========================================//
 
-    suspend fun getAllSources() {
-        val dbSources = repository.getAllSources()
+    suspend fun getAllSourcesForArticle() {
+        val dbSources = repository.getAllSourcesFromDB()
         _uiStates.update { it.copy(availableSources = dbSources) }
 
 
@@ -223,13 +155,5 @@ class ArticlesViewModel @Inject constructor(
             }
         }
     }
-
-    suspend fun getBookMarkArticles() {
-        val bookMarkArticles = repository.getBookMarkArticle()
-        _uiStates.update { it.copy(bookMarkArticles = bookMarkArticles.toCollection(ArrayList())) }
-    }
-
-
-    suspend fun getPreferredSources() = dataStore.preferredSources.first()
 
 }

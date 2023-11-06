@@ -87,176 +87,14 @@ fun DetailScreenContent(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        val context = LocalContext.current
-        Box {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(articleEntity.urlToImage)
-                    .crossfade(true)
-                    .build(),
-                placeholder = painterResource(R.drawable.placeholder),
-                contentDescription = "ArticleImage",
-                contentScale = ContentScale.FillBounds,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(150.sdp)
-                    .clip(RoundedCornerShape(4.sdp))
-            )
-
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.ArrowBackIosNew,
-                    contentDescription = "BackIcon",
-                    modifier = Modifier
-                        .padding(16.sdp)
-                        .drawBehind {
-                            drawCircle(
-                                color = Color.Black,
-                                radius = this.size.minDimension,
-                                alpha = 0.25F
-                            )
-                        }
-                        .clickable { navController.navigateUp() },
-                    tint = Color.White
-                )
-                Icon(
-                    imageVector = Icons.Filled.Share,
-                    contentDescription = "ShareIcon",
-                    modifier = Modifier
-                        .padding(16.sdp)
-                        .drawBehind {
-                            drawCircle(
-                                color = Color.Black,
-                                radius = this.size.minDimension,
-                                alpha = 0.25F
-                            )
-                        }
-                        .clickable {
-                            val sendIntent: Intent = Intent().apply {
-                                action = Intent.ACTION_SEND
-                                putExtra(Intent.EXTRA_TEXT, "${articleEntity.url}")
-                                type = "text/plain"
-                            }
-                            val shareIntent = Intent.createChooser(sendIntent, null)
-                            context.startActivity(shareIntent)
-                        },
-                    tint = Color.White
-                )
-            }
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            val scope = rememberCoroutineScope()
-            Text(
-                articleEntity.title ?: "-",
-                fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                color = Color.Black,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .weight(1F)
-                    .padding(start = 8.sdp, top = 8.sdp)
-            )
-            Column {
-                Icon(
-                    imageVector = Icons.Filled.Favorite,
-                    contentDescription = "FavIcon",
-                    modifier = Modifier
-
-                        .padding(16.sdp)
-                        .size(15.sdp)
-                        .clickable {
-                            scope.launch {
-                                articleEntity.isFav = !articleEntity.isFav
-                                viewModel.updateIsFav(articleEntity)
-                            }
-                        }
-                        .drawBehind {
-                            drawCircle(
-                                color = Color.Black,
-                                radius = this.size.minDimension,
-                                alpha = 0.25F
-                            )
-                        },
-                    tint = if (articleEntity.isFav) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimary
-                )
-                Icon(
-                    imageVector = Icons.Filled.Bookmark,
-                    contentDescription = "BookMarkIcon",
-                    modifier = Modifier
-
-                        .padding(16.sdp)
-                        .size(15.sdp)
-                        .clickable {
-                            scope.launch {
-                                if (!articleEntity.isBookMark) {
-                                    articleEntity.isBookMark = true
-                                    viewModel.insertBookMark(articleEntity)
-                                } else {
-                                    articleEntity.isBookMark = false
-                                    viewModel.removeBookMark(articleEntity)
-                                    articlesViewModel.getBookMarkArticles()
-
-                                }
-                            }
-                        }
-                        .drawBehind {
-                            drawCircle(
-                                color = Color.Black,
-                                radius = this.size.minDimension,
-                                alpha = 0.25F
-                            )
-                        },
-                    tint = if (articleEntity.isBookMark) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimary
-                )
-            }
-        }
+        TopDetailBox(articleEntity = articleEntity, navController = navController)
+        TitleRow(
+            articleEntity = articleEntity,
+            viewModel = viewModel,
+            articlesViewModel = articlesViewModel
+        )
         Spacer(modifier = Modifier.height(16.sdp))
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            var authorName = articleEntity.author ?: "-"
-
-            if (authorName.isNotEmpty()) {
-                if (authorName.contains("<a")) {
-                    authorName = authorName.split("<")[0]
-                }
-                Text(
-                    "By $authorName",
-                    fontSize = MaterialTheme.typography.labelSmall.fontSize,
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .weight(1F)
-
-                        .padding(start = 8.sdp)
-                        .clip(
-                            RoundedCornerShape(8.sdp)
-                        )
-                        .background(MaterialTheme.colorScheme.primary)
-                        .padding(8.sdp)
-                )
-            }
-            val date =
-                articleEntity.publishedAt?.getConvertDate(
-                    "yyyy-MM-dd'T'HH:mm:ss'Z'",
-                    "dd/MM/yyyy"
-                )
-                    ?: "-"
-            Text(
-                date,
-                fontSize = MaterialTheme.typography.labelSmall.fontSize,
-                modifier = Modifier
-                    .padding(8.sdp),
-                textAlign = TextAlign.End
-            )
-        }
+        AuthorRow(articleEntity = articleEntity)
         Spacer(modifier = Modifier.height(16.sdp))
 
         Text(
@@ -283,6 +121,191 @@ fun DetailScreenContent(
             }
         }
 
+    }
+}
+
+@Composable
+fun TopDetailBox(articleEntity: ArticleEntity, navController: NavController) {
+    val context = LocalContext.current
+    Box {
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(articleEntity.urlToImage)
+                .crossfade(true)
+                .build(),
+            placeholder = painterResource(R.drawable.placeholder),
+            contentDescription = "ArticleImage",
+            contentScale = ContentScale.FillBounds,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(150.sdp)
+                .clip(RoundedCornerShape(4.sdp))
+        )
+
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Filled.ArrowBackIosNew,
+                contentDescription = "BackIcon",
+                modifier = Modifier
+                    .padding(16.sdp)
+                    .drawBehind {
+                        drawCircle(
+                            color = Color.Black,
+                            radius = this.size.minDimension,
+                            alpha = 0.25F
+                        )
+                    }
+                    .clickable { navController.navigateUp() },
+                tint = Color.White
+            )
+            Icon(
+                imageVector = Icons.Filled.Share,
+                contentDescription = "ShareIcon",
+                modifier = Modifier
+                    .padding(16.sdp)
+                    .drawBehind {
+                        drawCircle(
+                            color = Color.Black,
+                            radius = this.size.minDimension,
+                            alpha = 0.25F
+                        )
+                    }
+                    .clickable {
+                        val sendIntent: Intent = Intent().apply {
+                            action = Intent.ACTION_SEND
+                            putExtra(Intent.EXTRA_TEXT, "${articleEntity.url}")
+                            type = "text/plain"
+                        }
+                        val shareIntent = Intent.createChooser(sendIntent, null)
+                        context.startActivity(shareIntent)
+                    },
+                tint = Color.White
+            )
+        }
+    }
+}
+
+@Composable
+fun TitleRow(
+    articleEntity: ArticleEntity,
+    viewModel: NewsFeedViewModel,
+    articlesViewModel: ArticlesViewModel
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        val scope = rememberCoroutineScope()
+        Text(
+            articleEntity.title ?: "-",
+            fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+            color = Color.Black,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier
+                .weight(1F)
+                .padding(start = 8.sdp, top = 8.sdp)
+        )
+        Column {
+            Icon(
+                imageVector = Icons.Filled.Favorite,
+                contentDescription = "FavIcon",
+                modifier = Modifier
+
+                    .padding(16.sdp)
+                    .size(15.sdp)
+                    .clickable {
+                        scope.launch {
+                            articleEntity.isFav = !articleEntity.isFav
+                            viewModel.updateIsFav(articleEntity)
+                        }
+                    }
+                    .drawBehind {
+                        drawCircle(
+                            color = Color.Black,
+                            radius = this.size.minDimension,
+                            alpha = 0.25F
+                        )
+                    },
+                tint = if (articleEntity.isFav) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimary
+            )
+            Icon(
+                imageVector = Icons.Filled.Bookmark,
+                contentDescription = "BookMarkIcon",
+                modifier = Modifier
+
+                    .padding(16.sdp)
+                    .size(15.sdp)
+                    .clickable {
+                        scope.launch {
+                            if (!articleEntity.isBookMark) {
+                                articleEntity.isBookMark = true
+                                viewModel.insertBookMark(articleEntity)
+                            } else {
+                                articleEntity.isBookMark = false
+                                viewModel.removeBookMark(articleEntity)
+                                articlesViewModel.getBookMarkArticles()
+
+                            }
+                        }
+                    }
+                    .drawBehind {
+                        drawCircle(
+                            color = Color.Black,
+                            radius = this.size.minDimension,
+                            alpha = 0.25F
+                        )
+                    },
+                tint = if (articleEntity.isBookMark) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimary
+            )
+        }
+    }
+}
+
+@Composable
+fun AuthorRow(articleEntity: ArticleEntity) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        var authorName = articleEntity.author ?: "-"
+
+        if (authorName.isNotEmpty()) {
+            if (authorName.contains("<a")) {
+                authorName = authorName.split("<")[0]
+            }
+            Text(
+                "By $authorName",
+                fontSize = MaterialTheme.typography.labelSmall.fontSize,
+                color = MaterialTheme.colorScheme.onPrimary,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .weight(1F)
+
+                    .padding(start = 8.sdp)
+                    .clip(
+                        RoundedCornerShape(8.sdp)
+                    )
+                    .background(MaterialTheme.colorScheme.primary)
+                    .padding(8.sdp)
+            )
+        }
+        val date =
+            articleEntity.publishedAt?.getConvertDate(
+                "yyyy-MM-dd'T'HH:mm:ss'Z'",
+                "dd/MM/yyyy"
+            )
+                ?: "-"
+        Text(
+            date,
+            fontSize = MaterialTheme.typography.labelSmall.fontSize,
+            modifier = Modifier
+                .padding(8.sdp),
+            textAlign = TextAlign.End
+        )
     }
 }
 

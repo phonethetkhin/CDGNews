@@ -32,39 +32,50 @@ class ApiServiceImpl @Inject constructor(
     ): NewsFeedResponseModel = client.get {
         url(BASE_URL + APIRoutes.newsFeed)
         contentType(ContentType.Application.Json)
+
         parameter("apiKey", Constants.API_KEY)
+
         if (country.isNotEmpty()) {
             parameter("country", country)
         }
+
         if (category.isNotEmpty()) {
             parameter("category", category)
         }
+
         if (sources.trim().isNotEmpty()) {
             parameter("sources", sources)
         }
+
         if (query.isNotEmpty()) {
             parameter("q", query)
         }
+
         parameter("pageSize", 100)
         parameter("page", pageNum)
 
     }
 
     override suspend fun getArticles(
-        query: String, sources:String, sortBy:String, pageNum: Int
+        query: String, sources: String, sortBy: String, pageNum: Int
     ): NewsFeedResponseModel = client.get {
         url(BASE_URL + APIRoutes.articles)
         contentType(ContentType.Application.Json)
+
         parameter("apiKey", Constants.API_KEY)
-        if(query.isNotEmpty()) {
+
+        if (query.isNotEmpty()) {
             parameter("q", query)
         }
-        if(sources.isNotEmpty()){
+
+        if (sources.isNotEmpty()) {
             parameter("sources", sources)
         }
-        if(sortBy.isNotEmpty()){
+
+        if (sortBy.isNotEmpty()) {
             parameter("sortBy", sortBy)
         }
+
         parameter("pageNum", pageNum)
     }
 
@@ -72,8 +83,5 @@ class ApiServiceImpl @Inject constructor(
         url(BASE_URL + APIRoutes.sources)
         contentType(ContentType.Application.Json)
         parameter("apiKey", Constants.API_KEY)
-
     }
-
-
 }

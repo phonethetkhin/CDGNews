@@ -1,7 +1,6 @@
 package com.ptk.ptk_news
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -56,31 +55,42 @@ class MainActivity : ComponentActivity() {
             var finishLoad by remember {
                 mutableStateOf(false)
             }
+
             var lightColorScheme by remember {
                 mutableStateOf(LightColorSchemeBlue)
             }
+
             var darkColorScheme by remember {
                 mutableStateOf(DarkColorSchemeBlue)
             }
+
             var typography by remember {
                 mutableStateOf(MediumFontSize)
             }
+
             val modifiedSmallFontSize = SmallFontSize.copy(
                 titleLarge = SmallFontSize.titleLarge.copy(fontSize = 16.ssp),
                 bodyLarge = SmallFontSize.bodyLarge.copy(fontSize = 12.ssp),
                 labelSmall = SmallFontSize.labelSmall.copy(fontSize = 8.ssp),
             )
+
+
             val modifiedMediumFontSize = MediumFontSize.copy(
                 titleLarge = MediumFontSize.titleLarge.copy(fontSize = 20.ssp),
                 bodyLarge = MediumFontSize.bodyLarge.copy(fontSize = 16.ssp),
                 labelSmall = MediumFontSize.labelSmall.copy(fontSize = 12.ssp),
             )
+
+
             val modifiedLargeFontSize = LargeFontSize.copy(
                 titleLarge = LargeFontSize.titleLarge.copy(fontSize = 24.ssp),
                 bodyLarge = LargeFontSize.bodyLarge.copy(fontSize = 20.ssp),
                 labelSmall = LargeFontSize.labelSmall.copy(fontSize = 16.ssp),
             )
+
+
             LaunchedEffect(Unit) {
+
                 lightColorScheme = when (dataStore.themeId.first()) {
                     1 -> LightColorSchemeBlue
                     2 -> LightColorSchemeYellow
@@ -88,6 +98,7 @@ class MainActivity : ComponentActivity() {
                     4 -> LightColorSchemePurple
                     else -> DarkColorSchemeBlue
                 }
+
                 darkColorScheme = when (dataStore.themeId.first()) {
                     1 -> DarkColorSchemeBlue
                     2 -> DarkColorSchemeYellow
@@ -95,12 +106,14 @@ class MainActivity : ComponentActivity() {
                     4 -> DarkColorSchemePurple
                     else -> DarkColorSchemeBlue
                 }
+
                 typography = when (dataStore.textSizeId.first()) {
                     1 -> modifiedSmallFontSize
                     2 -> modifiedMediumFontSize
                     3 -> modifiedLargeFontSize
                     else -> modifiedMediumFontSize
                 }
+
                 finishLoad = true
             }
 
@@ -124,6 +137,7 @@ fun MainComposable() {
     var navigationSelectedItem by remember {
         mutableIntStateOf(0)
     }
+
     val navBackStackEntry = navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry.value?.destination
 
@@ -134,9 +148,9 @@ fun MainComposable() {
                 NavigationBar(
                     containerColor = MaterialTheme.colorScheme.primary,
                 ) {
-                    //getting the list of bottom navigation items for our data class
+
                     bottomNavigationItems().forEachIndexed { index, navigationItem ->
-                        //iterating all items with their respective indexes
+
                         NavigationBarItem(
                             colors = NavigationBarItemDefaults.colors(
                                 selectedIconColor = MaterialTheme.colorScheme.onPrimary,
@@ -145,10 +159,9 @@ fun MainComposable() {
                                 unselectedTextColor = MaterialTheme.colorScheme.onPrimary,
                                 indicatorColor = MaterialTheme.colorScheme.secondary
                             ),
-                            selected = currentRoute.hierarchy?.any {
+                            selected = currentRoute.hierarchy.any {
                                 navigationItem.route == it.route
-                            } == true,
-
+                            },
                             icon = {
                                 Icon(
                                     navigationItem.icon,
@@ -159,12 +172,10 @@ fun MainComposable() {
                             onClick = {
                                 navigationSelectedItem = index
                                 navController.navigate(navigationItem.route) {
+
                                     popUpTo(navController.graph.findStartDestination().id) {
                                         navigationSelectedItem = index
-
                                         saveState = true
-                                        Log.e("TESTASDF", navigationSelectedItem.toString())
-
                                     }
 
                                     launchSingleTop = true

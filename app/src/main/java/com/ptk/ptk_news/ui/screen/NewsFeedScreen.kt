@@ -1,7 +1,6 @@
 package com.ptk.ptk_news.ui.screen
 
 import android.annotation.SuppressLint
-import android.content.Intent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,12 +18,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.Comment
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.FilterAltOff
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerState
@@ -46,7 +41,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -64,14 +58,16 @@ import com.ptk.ptk_news.db.entity.ArticleEntity
 import com.ptk.ptk_news.ui.ui_resource.composables.CommentBoxDialog
 import com.ptk.ptk_news.ui.ui_resource.composables.DrawerContent
 import com.ptk.ptk_news.ui.ui_resource.composables.NoConnectionDialog
+import com.ptk.ptk_news.ui.ui_resource.composables.ReactionBar
 import com.ptk.ptk_news.ui.ui_resource.composables.SearchView
 import com.ptk.ptk_news.ui.ui_resource.navigation.Routes
-import com.ptk.ptk_news.ui.ui_states.NewsFeedUIStates
+import com.ptk.ptk_news.ui.ui_states.ArticleUIStates
 import com.ptk.ptk_news.util.navigate
 import com.ptk.ptk_news.viewmodel.ArticlesViewModel
 import com.ptk.ptk_news.viewmodel.NewsFeedViewModel
 import ir.kaaveh.sdpcompose.sdp
 import ir.kaaveh.sdpcompose.ssp
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 
@@ -89,8 +85,7 @@ fun NewsFeedScreen(
 
     LaunchedEffect(key1 = Unit) {
         newsFeedViewModel.getAllSources()
-
-        newsFeedViewModel.getNewsFeed(1)
+        newsFeedViewModel.getNewsFeed()
     }
 
 
@@ -125,10 +120,12 @@ fun NewsFeedScreen(
                             coroutineScope.launch {
                                 newsFeedViewModel.savePreferredSetting()
                                 newsFeedViewModel.getNewsFeed()
+
                                 if (drawerState.isOpen) {
                                     coroutineScope.launch {
                                         drawerState.close()
                                     }
+
                                 }
                             }
                         }
@@ -163,13 +160,13 @@ fun NewsFeedScreen(
             CircularProgressIndicator(color = MaterialTheme.colorScheme.secondary)
         }
     }
+
     CommentBoxDialog(
         showDialog = uiStates.showCommentDialog,
         newsFeedViewModel,
         uiStates,
-        onDismissRequest = { newsFeedViewModel.toggleCommentBoxDialog(false, 0) }) {
+        onDismissRequest = { newsFeedViewModel.toggleCommentBoxDialog(false, 0) })
 
-    }
 
     NoConnectionDialog(
         showDialog = uiStates.isShowDisconnectedDialog,
@@ -182,7 +179,7 @@ fun NewsFeedScreenContent(
     drawerState: DrawerState,
     articleList: List<ArticleEntity>,
     articlesViewModel: ArticlesViewModel,
-    uiStates: NewsFeedUIStates,
+    uiStates: ArticleUIStates,
     viewModel: NewsFeedViewModel,
     navController: NavController,
 ) {
@@ -192,45 +189,13 @@ fun NewsFeedScreenContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxSize()
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.sdp)
-        ) {
 
-            SearchView(
-                selectedText = uiStates.searchText,
-                hideKeyboard = drawerState.isOpen,
-                onSearchValueChanged = viewModel::toggleSearchValueChange,
-                modifier = Modifier.weight(1F)
-            ) {
-                scope.launch {
-                    viewModel.getNewsFeed()
-                }
-            }
-            Spacer(modifier = Modifier.width(4.sdp))
-
-            Icon(
-                imageVector = if (uiStates.selectedCategory == 0
-                    && uiStates.selectedCountry == "All Countries"
-                    && uiStates.availableSources.none { it.selected }
-                ) Icons.Filled.FilterAltOff else Icons.Filled.FilterAlt,
-                contentDescription = "FilterIcon",
-                modifier = Modifier
-                    .size(30.sdp)
-                    .clickable {
-                        scope.launch {
-                            if (drawerState.isClosed) {
-                                drawerState.open()
-                            }
-                        }
-                    },
-                tint = MaterialTheme.colorScheme.primary
-            )
-        }
-
-
+        SearchRow(
+            uiStates = uiStates,
+            drawerState = drawerState,
+            viewModel = viewModel,
+            scope = scope
+        )
         HeadlinesList(
             articleList = articleList,
             navController = navController,
@@ -243,12 +208,58 @@ fun NewsFeedScreenContent(
 }
 
 @Composable
+fun SearchRow(
+    uiStates: ArticleUIStates,
+    drawerState: DrawerState,
+    viewModel: NewsFeedViewModel,
+    scope: CoroutineScope
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.sdp)
+    ) {
+
+        SearchView(
+            selectedText = uiStates.searchText,
+            hideKeyboard = drawerState.isOpen,
+            onSearchValueChanged = viewModel::toggleSearchValueChange,
+            modifier = Modifier.weight(1F)
+        ) {
+            scope.launch {
+                viewModel.getNewsFeed()
+            }
+        }
+        Spacer(modifier = Modifier.width(4.sdp))
+
+        Icon(
+            imageVector = if (uiStates.selectedCategory == 0
+                && uiStates.selectedCountry == "All Countries"
+                && uiStates.availableSources.none { it.selected }
+            ) Icons.Filled.FilterAltOff else Icons.Filled.FilterAlt,
+            contentDescription = "FilterIcon",
+            modifier = Modifier
+                .size(30.sdp)
+                .clickable {
+                    scope.launch {
+                        if (drawerState.isClosed) {
+                            drawerState.open()
+                        }
+                    }
+                },
+            tint = MaterialTheme.colorScheme.primary
+        )
+    }
+}
+
+@Composable
 fun ColumnScope.HeadlinesList(
     articleList: List<ArticleEntity>,
     navController: NavController,
     articlesViewModel: ArticlesViewModel,
     newsFeedViewModel: NewsFeedViewModel,
-    uiStates: NewsFeedUIStates,
+    uiStates: ArticleUIStates,
 ) {
     LazyColumn(
         modifier = Modifier
@@ -268,7 +279,7 @@ fun HeadlinesListItem(
     navController: NavController,
     articlesViewModel: ArticlesViewModel,
     viewModel: NewsFeedViewModel,
-    uiStates: NewsFeedUIStates,
+    uiStates: ArticleUIStates,
 ) {
     Spacer(modifier = Modifier.height(16.sdp))
 
@@ -311,122 +322,10 @@ fun HeadlinesListItem(
         }
 
     }
-    ReactionBar(viewModel = viewModel, articlesViewModel, article, uiStates)
+    ReactionBar(viewModel = viewModel, articlesViewModel, article)
     Spacer(modifier = Modifier.height(16.sdp))
     Divider()
 }
 
-@Composable
-fun ReactionBar(
-    viewModel: NewsFeedViewModel,
-    articlesViewModel: ArticlesViewModel,
-    articleEntity: ArticleEntity,
-    uiStates: NewsFeedUIStates
-) {
-    val context = LocalContext.current
 
-    val scope = rememberCoroutineScope()
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Icon(
-            imageVector = Icons.Filled.Favorite,
-            contentDescription = "FavIcon",
-            modifier = Modifier
-
-                .padding(16.sdp)
-                .size(15.sdp)
-                .clickable {
-                    scope.launch {
-                        articleEntity.isFav = !articleEntity.isFav
-                        viewModel.updateIsFav(articleEntity)
-                    }
-                }
-                .drawBehind {
-                    drawCircle(
-                        color = Color.Black,
-                        radius = this.size.minDimension,
-                        alpha = 0.25F
-                    )
-                },
-            tint = if (articleEntity.isFav) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimary
-        )
-        Icon(
-            imageVector = Icons.Filled.Comment,
-            contentDescription = "CommentIcon",
-            modifier = Modifier
-                .padding(16.sdp)
-                .size(15.sdp)
-                .clickable {
-                    viewModel.toggleCommentBoxDialog(true, articleEntity.id)
-                }
-                .drawBehind {
-                    drawCircle(
-                        color = Color.Black,
-                        radius = this.size.minDimension,
-                        alpha = 0.25F
-                    )
-                },
-            tint = MaterialTheme.colorScheme.onPrimary
-        )
-
-
-        Icon(
-            imageVector = Icons.Filled.Bookmark,
-            contentDescription = "BookMarkIcon",
-            modifier = Modifier
-
-                .padding(16.sdp)
-                .size(15.sdp)
-                .clickable {
-                    scope.launch {
-                        if (!articleEntity.isBookMark) {
-                            articleEntity.isBookMark = true
-                            viewModel.insertBookMark(articleEntity)
-                        } else {
-                            articleEntity.isBookMark = false
-                            viewModel.removeBookMark(articleEntity)
-                            articlesViewModel.getBookMarkArticles()
-
-                        }
-                    }
-                }
-                .drawBehind {
-                    drawCircle(
-                        color = Color.Black,
-                        radius = this.size.minDimension,
-                        alpha = 0.25F
-                    )
-                },
-            tint = if (articleEntity.isBookMark) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimary
-        )
-
-        Icon(
-            imageVector = Icons.Filled.Share,
-            contentDescription = "ShareIcon",
-            modifier = Modifier
-                .padding(16.sdp)
-                .size(15.sdp)
-                .clickable {
-                    val sendIntent: Intent = Intent().apply {
-                        action = Intent.ACTION_SEND
-                        putExtra(Intent.EXTRA_TEXT, "${articleEntity.url}")
-                        type = "text/plain"
-                    }
-                    val shareIntent = Intent.createChooser(sendIntent, null)
-                    context.startActivity(shareIntent)
-                }
-                .drawBehind {
-                    drawCircle(
-                        color = Color.Black,
-                        radius = this.size.minDimension,
-                        alpha = 0.25F
-                    )
-                },
-            tint = MaterialTheme.colorScheme.onPrimary
-        )
-    }
-}
 

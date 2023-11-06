@@ -19,6 +19,8 @@ class ArticleRepository @Inject constructor(
     private val sourceDao: SourceDao,
     private val articleDao: ArticleDao,
 ) {
+    //=======================================API functions========================================//
+
     suspend fun getNewsFeed(
         country: String,
         category: String,
@@ -26,10 +28,11 @@ class ArticleRepository @Inject constructor(
         query: String,
         pageNum: Int,
     ) = channelFlow {
+
         send(RemoteResource.Loading)
+
         try {
-            val response =
-                apiService.getNewsFeed(country, category, sources, query, pageNum)
+            val response = apiService.getNewsFeed(country, category, sources, query, pageNum)
             send(RemoteResource.Success(response))
         } catch (e: Exception) {
             when (e) {
@@ -42,7 +45,6 @@ class ArticleRepository @Inject constructor(
                 }
 
                 else -> {
-
                     val errorMessage = "Something went wrong:"
                     send(RemoteResource.Failure(errorMessage = errorMessage))
 
@@ -54,7 +56,9 @@ class ArticleRepository @Inject constructor(
     suspend fun getArticles(
         query: String, sources: String, sortBy: String, pageNum: Int
     ) = channelFlow {
+
         send(RemoteResource.Loading)
+
         try {
             val response =
                 apiService.getArticles(query, sources, sortBy, pageNum)
@@ -77,27 +81,34 @@ class ArticleRepository @Inject constructor(
         }
     }
 
-    //=======================================db function======================================//
+    //=======================================DB functions=========================================//
 
-    suspend fun getAllSources() = sourceDao.getAllSources()
+    suspend fun getAllSourcesFromDB() = sourceDao.getAllSources()
 
-    suspend fun insertArticles(articles: List<ArticleEntity>) =
+    suspend fun insertArticlesDB(articles: List<ArticleEntity>) =
         articleDao.insertAllArticles(articles)
 
-    suspend fun getAllNewsFeedsArticles() = articleDao.getAllNewsFeedsArticles()
-    suspend fun insertBookMarks(articleEntity: ArticleEntity) =
+
+    suspend fun getAllNewsFeedsArticlesFromDB() = articleDao.getAllNewsFeedsArticles()
+
+    suspend fun insertBookMarksDB(articleEntity: ArticleEntity) =
         articleDao.insertBookMark(articleEntity)
 
-    suspend fun removeBookMarks(articleId: Int) =
+
+    suspend fun removeBookMarksDB(articleId: Int) =
         articleDao.removeBookMark(articleId)
 
-    suspend fun getAllArticles() = articleDao.getAllArticles()
-    suspend fun getBookMarkArticle() = articleDao.getBookMarkArticles()
-    suspend fun getArticleById(articleId: Int) = articleDao.getArticleById(articleId)
-    suspend fun updateIsFav(isFav: Boolean, articleId: Int) =
+
+    suspend fun getAllArticlesDB() = articleDao.getAllArticles()
+
+    suspend fun getBookMarkArticleDB() = articleDao.getBookMarkArticles()
+
+    suspend fun getArticleByIdDB(articleId: Int) = articleDao.getArticleById(articleId)
+
+    suspend fun updateIsFavDB(isFav: Boolean, articleId: Int) =
         articleDao.updateIsFav(isFav, articleId)
 
-    suspend fun updateComment(postComment: String, commentTime: String, articleId: Int) =
+    suspend fun updateCommentDB(postComment: String, commentTime: String, articleId: Int) =
         articleDao.updateComment(postComment, commentTime, articleId)
 
 

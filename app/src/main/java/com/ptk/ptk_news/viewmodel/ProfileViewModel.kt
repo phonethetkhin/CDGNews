@@ -1,9 +1,8 @@
 package com.ptk.ptk_news.viewmodel
 
 import android.app.Application
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ptk.ptk_news.ui.ui_states.NewsFeedUIStates
+import com.ptk.ptk_news.repository.ArticleRepository
 import com.ptk.ptk_news.ui.ui_states.ProfileUIStates
 import com.ptk.ptk_news.util.datastore.MyDataStore
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,15 +15,14 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
+    private val articleRepository: ArticleRepository,
     private val context: Application,
     private val dataStore: MyDataStore,
 
-    ) : ViewModel() {
+    ) : BaseViewModel(articleRepository, context, dataStore) {
 
-    private val _uiStates = MutableStateFlow(ProfileUIStates())
-    var _newsFeedUIStates = MutableStateFlow(NewsFeedUIStates())
-
-    val uiStates = _uiStates.asStateFlow()
+    private val _profileUIStates = MutableStateFlow(ProfileUIStates())
+    val profileUIStates = _profileUIStates.asStateFlow()
 
     //=======================================states function======================================//
 
@@ -32,14 +30,14 @@ class ProfileViewModel @Inject constructor(
     suspend fun getTextSizeId() = dataStore.textSizeId.first()
     fun toggleThemeId(themeId: Int) {
         viewModelScope.launch {
-            _uiStates.update { it.copy(themeId = themeId) }
+            _profileUIStates.update { it.copy(themeId = themeId) }
             dataStore.saveThemeId(themeId)
         }
     }
 
     fun toggleSelectedTextSizeString(textSizeString: String) {
         viewModelScope.launch {
-            _uiStates.update { it.copy(selectedTextSize = textSizeString) }
+            _profileUIStates.update { it.copy(selectedTextSize = textSizeString) }
             val textSizeId = when (textSizeString) {
                 "S" -> 1
                 "M" -> 2
@@ -48,22 +46,6 @@ class ProfileViewModel @Inject constructor(
             }
             dataStore.saveTextSizeId(textSizeId)
 
-        }
-    }
-
-    fun savePreferredSetting() {
-        viewModelScope.launch {
-            val categoryId = _newsFeedUIStates.value.selectedCategory
-            val countryId =
-                _newsFeedUIStates.value.availableCountries.find { it.name == _newsFeedUIStates.value.selectedCountry }?.id
-                    ?: 53
-            val sources =
-                _newsFeedUIStates.value.availableSources.filter { it.selected }.map { it.id }
-                    .joinToString(",")
-
-            dataStore.savePreferredCategoryId(categoryId)
-            dataStore.savePreferredCountryId(countryId)
-            dataStore.savePreferredSources(sources)
         }
     }
 

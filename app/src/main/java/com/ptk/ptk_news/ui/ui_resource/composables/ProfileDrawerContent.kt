@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalLayoutApi::class, ExperimentalLayoutApi::class)
+@file:OptIn(ExperimentalLayoutApi::class)
 
 package com.ptk.ptk_news.ui.ui_resource.composables
 
@@ -39,18 +39,17 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import com.ptk.ptk_news.ui.ui_resource.theme.Red
-import com.ptk.ptk_news.ui.ui_states.NewsFeedUIStates
+import com.ptk.ptk_news.ui.ui_states.ArticleUIStates
 import com.ptk.ptk_news.viewmodel.NewsFeedViewModel
 import ir.kaaveh.sdpcompose.sdp
 
 @Composable
 fun ProfileDrawerContent(
-    uiStates: NewsFeedUIStates,
+    uiStates: ArticleUIStates,
     viewModel: NewsFeedViewModel,
     onDismiss: () -> Unit,
     onSave: () -> Unit,
 ) {
-
 
     Column(
         modifier = Modifier
@@ -84,109 +83,28 @@ fun ProfileDrawerContent(
         Spacer(modifier = Modifier.height(16.sdp))
 
         Divider()
-        PFilterBySourceLayout(uiStates = uiStates, viewModel = viewModel, onSave)
+        PFilterBySourceLayout(uiStates = uiStates, viewModel = viewModel)
 
+        MyButton(
+            text = "Save", textColor = Color.White, buttonColor = ButtonDefaults.buttonColors(
+                MaterialTheme.colorScheme.primary
+            ),
 
+            modifier = Modifier.fillMaxWidth()
+        ) {
+
+            onSave.invoke()
+
+        }
     }
 }
 
-@Composable
-fun PFilterBySourceLayout(
-    uiStates: NewsFeedUIStates,
-    viewModel: NewsFeedViewModel,
-    onSave: () -> Unit
-) {
-    Text(
-        text = "Preferred Source",
-        fontSize = MaterialTheme.typography.titleLarge.fontSize,
-        color = Color.Black,
-        fontWeight = FontWeight.Bold,
-        modifier = Modifier.padding(8.sdp)
-    )
-    Spacer(modifier = Modifier.height(4.sdp))
-    FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(7.sdp),
-    ) {
-        uiStates.availableSources.filter { it.selected }.forEach { source ->
-
-            Row(modifier = Modifier
-                .padding(top = 8.sdp)
-                .background(color = MaterialTheme.colorScheme.primary, shape = CircleShape)
-                .clickable {
-                    viewModel.toggleSelectedSources(source.name!!)
-                }
-                .padding(8.sdp)
-            ) {
-                Text(
-                    text = source.name!!,
-                    fontSize = MaterialTheme.typography.labelSmall.fontSize,
-                    color = Color.White,
-                    modifier = Modifier
-                        .padding(horizontal = 8.sdp)
-
-                )
-                Icon(
-                    imageVector = Icons.Filled.Close,
-                    contentDescription = "DeleteIcon",
-                    modifier = Modifier
-                        .alpha(1F),
-                    tint = Color.White
-
-                )
-
-            }
-        }
-    }
-    Spacer(modifier = Modifier.height(8.sdp))
-    OutlinedTextField(
-        onValueChange = viewModel::toggleSource,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 16.sdp, start = 16.sdp, end = 16.sdp)
-            .background(Color.White)
-            .border(1.sdp, color = MaterialTheme.colorScheme.primary),
-        value = uiStates.source,
-    )
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(200.sdp)
-            .alpha(alpha = if (uiStates.sourceSuggestions.isNotEmpty()) 1F else 0F)
-            .padding(start = 16.sdp, end = 16.sdp)
-            .clip(RoundedCornerShape(bottomStart = 10.sdp, bottomEnd = 10.sdp))
-            .background(Color.LightGray),
-    ) {
-        items(uiStates.sourceSuggestions) {
-            Text(
-                it, modifier = Modifier
-                    .padding(start = 8.sdp, top = 8.sdp)
-                    .clickable { viewModel.toggleSelectedSources(it) }
-            )
-        }
-
-    }
-    Spacer(modifier = Modifier.height(16.sdp))
-    MyButton(
-        text = "Save", textColor = Color.White, buttonColor = ButtonDefaults.buttonColors(
-            MaterialTheme.colorScheme.primary
-        ),
-
-        modifier = Modifier.fillMaxWidth()
-    ) {
-
-        onSave.invoke()
-
-    }
-
-}
 
 @Composable
 fun PFilterByCategoryLayout(
-    uiStates: NewsFeedUIStates,
+    uiStates: ArticleUIStates,
     viewModel: NewsFeedViewModel,
-
-
-    ) {
+) {
     Text(
         text = "Preferred Category",
         fontSize = MaterialTheme.typography.titleLarge.fontSize,
@@ -195,49 +113,7 @@ fun PFilterByCategoryLayout(
         modifier = Modifier.padding(8.sdp)
     )
     Spacer(modifier = Modifier.height(4.sdp))
-    FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(7.sdp),
-    ) {
-        uiStates.availableCategories.forEach { category ->
-            val color =
-                if (category.id == uiStates.selectedCategory) MaterialTheme.colorScheme.primary else Color.Transparent
-            val textColor =
-                if (category.id == uiStates.selectedCategory) Color.White else Color.Black
-            val border = if (category.id == uiStates.selectedCategory) 0.sdp else 1.sdp
-            val alpha = if (category.id == uiStates.selectedCategory) 1F else 0F
-
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier
-                .padding(top = 8.sdp)
-                .background(color = color, shape = CircleShape)
-                .border(
-                    width = border,
-                    color = MaterialTheme.colorScheme.primary,
-                    shape = CircleShape
-                )
-                .clickable {
-                    viewModel.toggleSelectedCategory(category.id)
-                }
-                .padding(8.sdp)
-            ) {
-                Text(
-                    text = category.name,
-                    fontSize = MaterialTheme.typography.labelSmall.fontSize,
-                    color = textColor,
-                    modifier = Modifier
-                        .padding(horizontal = 8.sdp)
-
-                )
-                Icon(
-                    imageVector = Icons.Filled.CheckCircle,
-                    contentDescription = "CheckIcon",
-                    modifier = Modifier
-                        .alpha(alpha),
-                    tint = Color.White
-                )
-
-            }
-        }
-    }
+    CategorySelectionRow(uiStates, viewModel)
     Spacer(modifier = Modifier.height(16.sdp))
 
     Divider()
@@ -262,3 +138,41 @@ fun PFilterByCategoryLayout(
 
 
 }
+
+
+
+@Composable
+fun PFilterBySourceLayout(
+    uiStates: ArticleUIStates,
+    viewModel: NewsFeedViewModel,
+) {
+    Text(
+        text = "Preferred Source",
+        fontSize = MaterialTheme.typography.titleLarge.fontSize,
+        color = Color.Black,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier.padding(8.sdp)
+    )
+    Spacer(modifier = Modifier.height(4.sdp))
+
+    SourceSelectionRow(uiStates = uiStates, viewModel =viewModel )
+
+    Spacer(modifier = Modifier.height(8.sdp))
+
+    OutlinedTextField(
+        onValueChange = viewModel::toggleSource,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 16.sdp, start = 16.sdp, end = 16.sdp)
+            .background(Color.White)
+            .border(1.sdp, color = MaterialTheme.colorScheme.primary),
+        value = uiStates.source,
+    )
+    SourceSuggestionList(uiStates = uiStates, viewModel = viewModel)
+
+    Spacer(modifier = Modifier.height(16.sdp))
+
+
+}
+
+

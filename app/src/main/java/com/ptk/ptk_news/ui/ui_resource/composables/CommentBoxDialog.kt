@@ -37,7 +37,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.ptk.ptk_news.ui.ui_resource.theme.Red
-import com.ptk.ptk_news.ui.ui_states.NewsFeedUIStates
+import com.ptk.ptk_news.ui.ui_states.ArticleUIStates
 import com.ptk.ptk_news.viewmodel.NewsFeedViewModel
 import ir.kaaveh.sdpcompose.sdp
 
@@ -45,9 +45,8 @@ import ir.kaaveh.sdpcompose.sdp
 fun CommentBoxDialog(
     showDialog: Boolean,
     newsFeedViewModel: NewsFeedViewModel,
-    newsFeedUIStates: NewsFeedUIStates,
+    uiStates: ArticleUIStates,
     onDismissRequest: () -> Unit,
-    onSave: () -> Unit
 ) {
     if (showDialog) {
         Dialog(
@@ -86,37 +85,42 @@ fun CommentBoxDialog(
                             .align(Alignment.End)
                     )
                     Spacer(modifier = Modifier.height(16.sdp))
-                    if (newsFeedUIStates.commentList.isEmpty()) {
-                        Column(
-                            modifier = Modifier
-                                .weight(1F)
-                                .padding(8.sdp),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                text = "There are no comments yet.",
-                                modifier = Modifier.fillMaxWidth(),
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier
-                                .weight(1F)
-                                .padding(horizontal = 8.sdp)
-                        ) {
-                            items(newsFeedUIStates.commentList) {
-                                CommentListItem(it)
-
-                            }
-                        }
-                    }
-                    BottomBar(newsFeedViewModel, newsFeedUIStates)
+                    CommentList(uiStates = uiStates)
+                    BottomBar(newsFeedViewModel, uiStates)
 
                     Spacer(modifier = Modifier.imePadding())
 
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun ColumnScope.CommentList(uiStates: ArticleUIStates) {
+    if (uiStates.commentList.isEmpty()) {
+        Column(
+            modifier = Modifier
+                .weight(1F)
+                .padding(8.sdp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "There are no comments yet.",
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
+        }
+    } else {
+        LazyColumn(
+            modifier = Modifier
+                .weight(1F)
+                .padding(horizontal = 8.sdp)
+        ) {
+            items(uiStates.commentList) {
+                CommentListItem(it)
+
             }
         }
     }
@@ -180,7 +184,7 @@ fun CommentListItem(commentItem: String) {
 }
 
 @Composable
-fun ColumnScope.BottomBar(newsFeedViewModel: NewsFeedViewModel, uiStates: NewsFeedUIStates) {
+fun ColumnScope.BottomBar(newsFeedViewModel: NewsFeedViewModel, uiStates: ArticleUIStates) {
 
     CommentUserInput(
         uiStates.commentText,

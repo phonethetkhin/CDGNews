@@ -1,14 +1,12 @@
 package com.ptk.ptk_news.viewmodel
 
 import android.app.Application
-import android.content.Context
-import android.net.ConnectivityManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ptk.ptk_news.db.entity.SourceEntity
 import com.ptk.ptk_news.model.RemoteResource
 import com.ptk.ptk_news.repository.HomeRepository
-import com.ptk.ptk_news.ui.ui_states.NewsFeedUIStates
+import com.ptk.ptk_news.ui.ui_states.ArticleUIStates
 import com.ptk.ptk_news.util.datastore.MyDataStore
 import com.ptk.ptk_news.util.showToast
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,10 +25,8 @@ class HomeViewModel @Inject constructor(
 
     ) : ViewModel() {
 
-    val _uiStates = MutableStateFlow(NewsFeedUIStates())
+    val _uiStates = MutableStateFlow(ArticleUIStates())
     val uiStates = _uiStates.asStateFlow()
-
-    //=======================================states function======================================//
 
 
     //=======================================api function=========================================//
@@ -66,6 +62,6 @@ class HomeViewModel @Inject constructor(
 
     //=======================================db function=========================================//
 
-    suspend fun insertAllSources(sources: List<SourceEntity>) = repository.insertAllDao(sources)
+    suspend fun insertAllSources(sources: List<SourceEntity>) = repository.insertAllSourcesDB(sources)
 
 }

@@ -27,6 +27,7 @@ object KtorClient {
             logger = CustomHttpLogger()
             level = LogLevel.BODY
         }
+
         install(JsonFeature) {
             serializer = KotlinxSerializer(Json {
                 isLenient = false
@@ -35,11 +36,13 @@ object KtorClient {
                 useArrayPolymorphism = false
             })
         }
+
         install(HttpTimeout) {
             requestTimeoutMillis = 1800000L
             connectTimeoutMillis = 120000L
             socketTimeoutMillis = 120000L
         }
+
     }
 
     class CustomHttpLogger() : Logger {

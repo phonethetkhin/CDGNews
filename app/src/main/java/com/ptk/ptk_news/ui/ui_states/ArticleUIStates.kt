@@ -7,8 +7,9 @@ import com.ptk.ptk_news.model.ui_model.CountryModel
 import com.ptk.ptk_news.util.getCountriesList
 
 
-data class NewsFeedUIStates(
+data class ArticleUIStates(
 
+    //NewsFeed Screen
     val showLoadingDialog: Boolean = false,
     val showCommentDialog: Boolean = false,
     val errorMessage: String = "",
@@ -44,5 +45,20 @@ data class NewsFeedUIStates(
     val articleEntity: ArticleEntity? = null,
 
     val isShowDisconnectedDialog: Boolean = false,
+
+
+    //Article Screen
+
+    val sortBy: String = "",
+
+    val articleSearchText: String = "trending",
+    val selectedSortBy: Int = 1,
+
+    val isShowFilterDialog: Boolean = false,
+
+    val bookMarkArticles: ArrayList<ArticleEntity> = arrayListOf(),
+
+
+    val articlesList: List<ArticleEntity> = listOf(),
 
     )

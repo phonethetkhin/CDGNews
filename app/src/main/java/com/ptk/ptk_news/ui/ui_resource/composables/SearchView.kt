@@ -71,9 +71,9 @@ fun SearchView(
         },
         keyboardActions = KeyboardActions(onDone = { onSearch.invoke() }),
         textStyle = TextStyle.Default.copy(
-            color = Color.Black, // Text color
-            textAlign = TextAlign.Start, // Text alignment
-            fontSize = MaterialTheme.typography.labelSmall.fontSize, // Text size
+            color = Color.Black,
+            textAlign = TextAlign.Start,
+            fontSize = MaterialTheme.typography.labelSmall.fontSize,
 
         ),
 

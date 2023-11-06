@@ -40,10 +40,9 @@ import coil.request.ImageRequest
 import com.ptk.ptk_news.R
 import com.ptk.ptk_news.db.entity.ArticleEntity
 import com.ptk.ptk_news.ui.ui_resource.composables.CommentBoxDialog
+import com.ptk.ptk_news.ui.ui_resource.composables.ReactionBar
 import com.ptk.ptk_news.ui.ui_resource.navigation.Routes
 import com.ptk.ptk_news.ui.ui_resource.theme.Red
-import com.ptk.ptk_news.ui.ui_states.ArticlesUIStates
-import com.ptk.ptk_news.ui.ui_states.NewsFeedUIStates
 import com.ptk.ptk_news.util.navigate
 import com.ptk.ptk_news.viewmodel.ArticlesViewModel
 import com.ptk.ptk_news.viewmodel.NewsFeedViewModel
@@ -86,8 +85,8 @@ fun BookMarkScreen(
         BookMarkScreenContent(
             uiStates.bookMarkArticles,
             navController,
-            articlesViewModel, uiStates,
-            newsFeedViewModel, newsFeedUIStates,
+            articlesViewModel,
+            newsFeedViewModel,
         )
 
 
@@ -106,9 +105,7 @@ fun BookMarkScreen(
         showDialog = newsFeedUIStates.showCommentDialog,
         newsFeedViewModel,
         newsFeedUIStates,
-        onDismissRequest = { newsFeedViewModel.toggleCommentBoxDialog(false, 0) }) {
-
-    }
+        onDismissRequest = { newsFeedViewModel.toggleCommentBoxDialog(false, 0) })
 }
 
 @Composable
@@ -116,9 +113,7 @@ fun BookMarkScreenContent(
     articleList: List<ArticleEntity>,
     navController: NavController,
     articlesViewModel: ArticlesViewModel,
-    uiStates: ArticlesUIStates,
     newsFeedViewModel: NewsFeedViewModel,
-    newsFeedUIStates: NewsFeedUIStates,
 ) {
     val scope = rememberCoroutineScope()
     Column(
@@ -131,8 +126,7 @@ fun BookMarkScreenContent(
             articleList,
             navController,
             articlesViewModel,
-            uiStates,
-            newsFeedViewModel, newsFeedUIStates
+            newsFeedViewModel
         )
 
     }
@@ -143,9 +137,7 @@ fun ColumnScope.BookMarkArticlesList(
     articleList: List<ArticleEntity>,
     navController: NavController,
     articlesViewModel: ArticlesViewModel,
-    uiStates: ArticlesUIStates,
     newsFeedViewModel: NewsFeedViewModel,
-    newsFeedUIStates: NewsFeedUIStates,
 ) {
     LazyColumn(
         modifier = Modifier
@@ -157,9 +149,7 @@ fun ColumnScope.BookMarkArticlesList(
                 it,
                 navController,
                 articlesViewModel,
-                uiStates,
                 newsFeedViewModel,
-                newsFeedUIStates
             )
 
         }
@@ -171,9 +161,7 @@ fun BookMarkArticleItem(
     article: ArticleEntity,
     navController: NavController,
     articlesViewModel: ArticlesViewModel,
-    uiStates: ArticlesUIStates,
     newsFeedViewModel: NewsFeedViewModel,
-    newsFeedUIStates: NewsFeedUIStates,
 ) {
     Spacer(modifier = Modifier.height(16.sdp))
 
@@ -216,7 +204,7 @@ fun BookMarkArticleItem(
         }
 
     }
-    ReactionBar(newsFeedViewModel, articlesViewModel = articlesViewModel, article, newsFeedUIStates)
+    ReactionBar(viewModel = newsFeedViewModel, articlesViewModel, article)
     Spacer(modifier = Modifier.height(16.sdp))
     Divider()
 }
