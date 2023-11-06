@@ -9,11 +9,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.ptk.ptk_news.db.entity.ArticleEntity
 import com.ptk.ptk_news.ui.screen.ArticlesScreen
+import com.ptk.ptk_news.ui.screen.BookMarkScreen
 import com.ptk.ptk_news.ui.screen.DetailScreen
 import com.ptk.ptk_news.ui.screen.LandingScreen
 import com.ptk.ptk_news.ui.screen.NewsFeedScreen
 import com.ptk.ptk_news.ui.screen.ProfileScreen
-import com.ptk.ptk_news.ui.screen.SettingScreen
 import com.ptk.ptk_news.ui.screen.SplashScreen
 
 @Composable
@@ -24,7 +24,7 @@ fun NavGraph(
     NavHost(
         modifier = Modifier.padding(bottom = scaffoldPaddingValue.dp),
         navController = navController,
-        startDestination = Routes.NewsFeedScreen.route
+        startDestination = Routes.SplashScreen.route
     ) {
 
         composable(route = Routes.SplashScreen.route) {
@@ -46,8 +46,8 @@ fun NavGraph(
 
             DetailScreen(navController, article)
         }
-        composable(route = Routes.SettingScreen.route) {
-            SettingScreen(navController)
+        composable(route = Routes.BookMarkScreen.route) {
+            BookMarkScreen(navController)
         }
         composable(route = Routes.ProfileScreen.route) {
             ProfileScreen(navController)

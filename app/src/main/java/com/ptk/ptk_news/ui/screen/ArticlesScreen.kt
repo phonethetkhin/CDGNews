@@ -50,8 +50,10 @@ import com.ptk.ptk_news.ui.ui_resource.composables.FilterSourceDialog
 import com.ptk.ptk_news.ui.ui_resource.composables.SearchView
 import com.ptk.ptk_news.ui.ui_resource.navigation.Routes
 import com.ptk.ptk_news.ui.ui_states.ArticlesUIStates
+import com.ptk.ptk_news.ui.ui_states.NewsFeedUIStates
 import com.ptk.ptk_news.util.navigate
 import com.ptk.ptk_news.viewmodel.ArticlesViewModel
+import com.ptk.ptk_news.viewmodel.NewsFeedViewModel
 import ir.kaaveh.sdpcompose.sdp
 import ir.kaaveh.sdpcompose.ssp
 import kotlinx.coroutines.launch
@@ -62,9 +64,11 @@ import kotlinx.coroutines.launch
 fun ArticlesScreen(
     navController: NavController,
     articlesViewModel: ArticlesViewModel = hiltViewModel(),
+    newsFeedViewModel: NewsFeedViewModel = hiltViewModel(),
 
     ) {
     val uiStates by articlesViewModel.uiStates.collectAsState()
+    val newsFeedUIStates by newsFeedViewModel.uiStates.collectAsState()
 
 
     LaunchedEffect(key1 = Unit) {
@@ -73,7 +77,13 @@ fun ArticlesScreen(
         articlesViewModel.getArticles()
 
     }
-    ArticlesScreenContent(navController,uiStates, articlesViewModel)
+    ArticlesScreenContent(
+        navController,
+        uiStates,
+        articlesViewModel,
+        newsFeedViewModel,
+        newsFeedUIStates
+    )
 
     val scope = rememberCoroutineScope()
     FilterSourceDialog(
@@ -98,6 +108,8 @@ fun ArticlesScreenContent(
     navController: NavController,
     uiStates: ArticlesUIStates,
     viewModel: ArticlesViewModel,
+    newsFeedViewModel: NewsFeedViewModel,
+    newsFeedUIStates: NewsFeedUIStates,
 ) {
     val scope = rememberCoroutineScope()
     Column(
@@ -203,37 +215,46 @@ fun ArticlesScreenContent(
             }
         }
 
-        ArticleList(navController, uiStates.articlesList)
+        ArticleList(navController, uiStates.articlesList, newsFeedViewModel, newsFeedUIStates)
     }
 
 }
 
 @Composable
-fun ColumnScope.ArticleList(navController: NavController, articleList: List<ArticleEntity>) {
+fun ColumnScope.ArticleList(
+    navController: NavController,
+    articleList: List<ArticleEntity>,
+    newsFeedViewModel: NewsFeedViewModel,
+    newsFeedUIStates: NewsFeedUIStates,
+) {
     LazyColumn(
         modifier = Modifier
             .weight(1F)
             .padding(8.sdp)
     ) {
         items(articleList) {
-            ArticleListItem(navController, it)
-            Divider()
+            ArticleListItem(navController, it, newsFeedViewModel, newsFeedUIStates)
         }
     }
 }
 
 @Composable
-fun ArticleListItem(navController: NavController, article: ArticleEntity) {
+fun ArticleListItem(
+    navController: NavController, article: ArticleEntity, newsFeedViewModel: NewsFeedViewModel,
+    newsFeedUIStates: NewsFeedUIStates,
+) {
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(vertical = 8.sdp).clickable {
-            navController.navigate(
-                route = Routes.DetailScreen.route, args = bundleOf(
-                    "article" to article
+        modifier = Modifier
+            .padding(vertical = 8.sdp)
+            .clickable {
+                navController.navigate(
+                    route = Routes.DetailScreen.route, args = bundleOf(
+                        "article" to article
+                    )
                 )
-            )
-        }
+            }
     ) {
         Spacer(modifier = Modifier.width(8.sdp))
 
@@ -258,6 +279,8 @@ fun ArticleListItem(navController: NavController, article: ArticleEntity) {
         )
 
     }
+    ReactionBar(viewModel = newsFeedViewModel, articleEntity = article, uiStates = newsFeedUIStates)
+    Divider()
 
 }
 

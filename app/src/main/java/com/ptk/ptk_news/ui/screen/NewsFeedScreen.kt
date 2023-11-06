@@ -1,15 +1,12 @@
-@file:JvmName("NewsFeedScreenKt")
-@file:OptIn(ExperimentalLayoutApi::class)
-
 package com.ptk.ptk_news.ui.screen
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,8 +20,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Comment
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.FilterAltOff
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerState
@@ -214,29 +214,43 @@ fun NewsFeedScreenContent(
         }
 
 
-        HeadlinesList(articleList = articleList, navController = navController)
+        HeadlinesList(
+            articleList = articleList,
+            navController = navController,
+            newsFeedViewModel = viewModel,
+            uiStates
+        )
     }
 
 }
 
 @Composable
-fun ColumnScope.HeadlinesList(articleList: List<ArticleEntity>, navController: NavController) {
+fun ColumnScope.HeadlinesList(
+    articleList: List<ArticleEntity>,
+    navController: NavController,
+    newsFeedViewModel: NewsFeedViewModel,
+    uiStates: NewsFeedUIStates,
+) {
     LazyColumn(
         modifier = Modifier
             .weight(1F)
             .padding(horizontal = 8.sdp)
     ) {
         items(articleList) {
-            Spacer(modifier = Modifier.height(16.sdp))
-            HeadlinesListItem(it, navController)
-            Spacer(modifier = Modifier.height(16.sdp))
-            Divider()
+            HeadlinesListItem(it, navController, newsFeedViewModel, uiStates)
+
         }
     }
 }
 
 @Composable
-fun HeadlinesListItem(article: ArticleEntity, navController: NavController) {
+fun HeadlinesListItem(
+    article: ArticleEntity,
+    navController: NavController,
+    viewModel: NewsFeedViewModel,
+    uiStates: NewsFeedUIStates,
+) {
+    Spacer(modifier = Modifier.height(16.sdp))
 
     Box(
         modifier = Modifier
@@ -262,23 +276,7 @@ fun HeadlinesListItem(article: ArticleEntity, navController: NavController) {
                 .fillMaxWidth()
                 .height(200.sdp)
         )
-        Icon(
-            imageVector = Icons.Filled.Bookmark,
-            contentDescription = "SaveIcon",
-            modifier = Modifier
-                .padding(16.sdp)
-                .size(25.sdp)
-                .drawBehind {
-                    drawCircle(
-                        color = Color.Black,
-                        radius = this.size.minDimension,
-                        alpha = 0.25F
-                    )
-                }.align(Alignment.TopEnd)
 
-                ,
-            tint = MaterialTheme.colorScheme.onPrimary
-        )
         Surface(
             modifier = Modifier.align(Alignment.BottomStart),
             color = Color.Black.copy(alpha = 0.6f)
@@ -293,6 +291,116 @@ fun HeadlinesListItem(article: ArticleEntity, navController: NavController) {
         }
 
     }
+    ReactionBar(viewModel = viewModel, article, uiStates)
+    Spacer(modifier = Modifier.height(16.sdp))
+    Divider()
+}
 
+@Composable
+fun ReactionBar(
+    viewModel: NewsFeedViewModel,
+    articleEntity: ArticleEntity,
+    uiStates: NewsFeedUIStates
+) {
+    val context = LocalContext.current
+
+    val scope = rememberCoroutineScope()
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Favorite,
+            contentDescription = "FavIcon",
+            modifier = Modifier
+
+                .padding(16.sdp)
+                .size(15.sdp)
+                .clickable {
+                    scope.launch {
+                        articleEntity.isFav = !articleEntity.isFav
+                        viewModel.updateIsFav(articleEntity)
+                    }
+                }
+                .drawBehind {
+                    drawCircle(
+                        color = Color.Black,
+                        radius = this.size.minDimension,
+                        alpha = 0.25F
+                    )
+                },
+            tint = if (articleEntity.isFav) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimary
+        )
+        Icon(
+            imageVector = Icons.Filled.Comment,
+            contentDescription = "CommentIcon",
+            modifier = Modifier
+                .padding(16.sdp)
+                .size(15.sdp)
+                .drawBehind {
+                    drawCircle(
+                        color = Color.Black,
+                        radius = this.size.minDimension,
+                        alpha = 0.25F
+                    )
+                },
+            tint = MaterialTheme.colorScheme.onPrimary
+        )
+
+
+        Icon(
+            imageVector = Icons.Filled.Bookmark,
+            contentDescription = "BookMarkIcon",
+            modifier = Modifier
+
+                .padding(16.sdp)
+                .size(15.sdp)
+                .clickable {
+                    scope.launch {
+                        if (!articleEntity.isBookMark) {
+                            articleEntity.isBookMark = true
+                            viewModel.insertBookMark(articleEntity)
+                        } else {
+                            articleEntity.isBookMark = false
+                            viewModel.removeBookMark(articleEntity)
+                        }
+                    }
+                }
+                .drawBehind {
+                    drawCircle(
+                        color = Color.Black,
+                        radius = this.size.minDimension,
+                        alpha = 0.25F
+                    )
+                },
+            tint = if (articleEntity.isBookMark) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimary
+        )
+
+        Icon(
+            imageVector = Icons.Filled.Share,
+            contentDescription = "ShareIcon",
+            modifier = Modifier
+                .padding(16.sdp)
+                .size(15.sdp)
+                .clickable {
+                    val sendIntent: Intent = Intent().apply {
+                        action = Intent.ACTION_SEND
+                        putExtra(Intent.EXTRA_TEXT, "${articleEntity.url}")
+                        type = "text/plain"
+                    }
+                    val shareIntent = Intent.createChooser(sendIntent, null)
+                    context.startActivity(shareIntent)
+                }
+                .drawBehind {
+                    drawCircle(
+                        color = Color.Black,
+                        radius = this.size.minDimension,
+                        alpha = 0.25F
+                    )
+                },
+            tint = MaterialTheme.colorScheme.onPrimary
+        )
+    }
 }
 

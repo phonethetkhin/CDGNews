@@ -42,6 +42,8 @@ data class ArticleEntity(
     val content: String? = null,
 
     var isHeadLine: Boolean = false,
+    var isBookMark: Boolean = false,
+    var isFav: Boolean = false,
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
 
     ) : Parcelable {
@@ -53,6 +55,8 @@ data class ArticleEntity(
         parcel.readString(),
         parcel.readString(),
         parcel.readString(),
+        parcel.readByte() != 0.toByte(),
+        parcel.readByte() != 0.toByte(),
         parcel.readByte() != 0.toByte(),
         parcel.readInt()
     ) {
@@ -67,6 +71,8 @@ data class ArticleEntity(
         parcel.writeString(url)
         parcel.writeString(content)
         parcel.writeByte(if (isHeadLine) 1 else 0)
+        parcel.writeByte(if (isBookMark) 1 else 0)
+        parcel.writeByte(if (isFav) 1 else 0)
         parcel.writeInt(id)
     }
 
@@ -83,4 +89,5 @@ data class ArticleEntity(
             return arrayOfNulls(size)
         }
     }
+
 }

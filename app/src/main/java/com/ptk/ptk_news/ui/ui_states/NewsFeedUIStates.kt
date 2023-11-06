@@ -13,7 +13,7 @@ data class NewsFeedUIStates(
     val errorMessage: String = "",
     val newsFeedList: List<ArticleEntity> = listOf(),
     val isFilterBySource: Boolean = false,
-
+    val recompose: Boolean = false,
     val selectedCategory: Int = 0,
     val availableCategories: List<CategoryModel> = listOf(
         CategoryModel(id = 0, name = "All Categories"),

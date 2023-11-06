@@ -5,7 +5,6 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.ptk.ptk_news.db.entity.ArticleEntity
-import com.ptk.ptk_news.db.entity.SourceEntity
 
 @Dao
 interface ArticleDao {
@@ -13,10 +12,25 @@ interface ArticleDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAllArticles(articles: List<ArticleEntity>)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertBookMark(articles: ArticleEntity): Long
+
+    @Query("UPDATE tbl_article SET isBookMark=0 WHERE id=:articleId")
+    suspend fun removeBookMark(articleId: Int)
+
+    @Query("SELECT * FROM tbl_article WHERE id = :articleId")
+    suspend fun getBookMarkArticle(articleId: Int): ArticleEntity?
+
     @Query("SELECT * FROM tbl_article WHERE isHeadLine = 1")
     suspend fun getAllNewsFeedsArticles(): List<ArticleEntity>
 
     @Query("SELECT * FROM tbl_article WHERE isHeadLine = 0")
     suspend fun getAllArticles(): List<ArticleEntity>
+
+    @Query("SELECT * FROM tbl_article WHERE isBookMark=1")
+    suspend fun getBookMarkArticles(): List<ArticleEntity>
+
+    @Query("UPDATE tbl_article SET isFav =:isFav WHERE id =:articleId")
+    suspend fun updateIsFav(isFav:Boolean, articleId: Int)
 
 }

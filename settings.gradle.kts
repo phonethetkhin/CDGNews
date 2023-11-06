@@ -25,4 +25,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "PTKNews"
 include(":app")
- 

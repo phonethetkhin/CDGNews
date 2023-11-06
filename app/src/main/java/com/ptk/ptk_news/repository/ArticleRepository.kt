@@ -85,8 +85,15 @@ class ArticleRepository @Inject constructor(
         articleDao.insertAllArticles(articles)
 
     suspend fun getAllNewsFeedsArticles() = articleDao.getAllNewsFeedsArticles()
+    suspend fun insertBookMarks(articleEntity: ArticleEntity) =
+        articleDao.insertBookMark(articleEntity)
+
+    suspend fun removeBookMarks(articleId:Int) =
+        articleDao.removeBookMark(articleId)
 
     suspend fun getAllArticles() = articleDao.getAllArticles()
+    suspend fun getBookMarkArticle() = articleDao.getBookMarkArticles()
+    suspend fun updateIsFav(isFav:Boolean, articleId: Int) = articleDao.updateIsFav(isFav, articleId)
 
 
 }

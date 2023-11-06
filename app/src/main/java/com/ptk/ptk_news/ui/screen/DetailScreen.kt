@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -33,6 +35,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -93,9 +96,7 @@ fun DetailScreenContent(articleEntity: ArticleEntity, navController: NavControll
                             alpha = 0.25F
                         )
                     }
-                    .clickable { navController.navigateUp() }
-
-                    ,
+                    .clickable { navController.navigateUp() },
                 tint = Color.White
             )
         }
@@ -111,15 +112,40 @@ fun DetailScreenContent(articleEntity: ArticleEntity, navController: NavControll
                     .weight(1F)
                     .padding(start = 8.sdp, top = 8.sdp)
             )
-            Icon(
-                imageVector = Icons.Filled.Favorite,
-                "ReactionIcon",
-                modifier = Modifier
-                    .size(40.sdp)
-                    .padding(8.sdp),
-                tint = MaterialTheme.colorScheme.primary
-            )
+            Column {
+                Icon(
+                    imageVector = Icons.Filled.Favorite,
+                    "FavoriteIcon",
+                    modifier = Modifier
+                        .size(40.sdp)
+                        .padding(8.sdp),
+                    tint = if (articleEntity.isFav) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimary
+                )
+                Icon(
+                    imageVector = Icons.Filled.Bookmark,
+                    "BookMarkIcon",
+                    modifier = Modifier
+                        .clickable {
+                            /*  scope.launch {
+                                  articleEntity.isFav = !articleEntity.isFav
+                                  viewModel.updateIsFav(articleEntity)
+                              }*/
+                        }
+
+                        .size(40.sdp)
+                        .padding(8.sdp)
+                        .drawBehind {
+                            drawCircle(
+                                color = Color.Black,
+                                radius = this.size.minDimension,
+                                alpha = 0.25F
+                            )
+                        },
+                    tint = if (articleEntity.isBookMark) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimary
+                )
+            }
         }
+        Spacer(modifier = Modifier.height(16.sdp))
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -137,6 +163,8 @@ fun DetailScreenContent(articleEntity: ArticleEntity, navController: NavControll
                     color = MaterialTheme.colorScheme.onPrimary,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
+                        .weight(1F)
+
                         .padding(start = 8.sdp)
                         .clip(
                             RoundedCornerShape(8.sdp)
@@ -146,15 +174,20 @@ fun DetailScreenContent(articleEntity: ArticleEntity, navController: NavControll
                 )
             }
             val date =
-                articleEntity.publishedAt?.getConvertDate("yyyy-MM-dd'T'HH:mm:ss'Z'", "dd/MM/yyyy")
+                articleEntity.publishedAt?.getConvertDate(
+                    "yyyy-MM-dd'T'HH:mm:ss'Z'",
+                    "dd/MM/yyyy"
+                )
                     ?: "-"
             Text(
                 date,
                 fontSize = MaterialTheme.typography.labelSmall.fontSize,
                 modifier = Modifier
-                    .padding(8.sdp)
+                    .padding(8.sdp),
+                textAlign = TextAlign.End
             )
         }
+        Spacer(modifier = Modifier.height(16.sdp))
 
         Text(
             articleEntity.description ?: "-",
@@ -181,6 +214,5 @@ fun DetailScreenContent(articleEntity: ArticleEntity, navController: NavControll
         }
 
     }
-
 }
 

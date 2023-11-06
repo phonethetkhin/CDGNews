@@ -244,7 +244,7 @@ fun ColorSelectionRow(
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
-                .background(Orange)
+                .background(Blue)
                 .size(50.sdp)
                 .clickable {
                     viewModel.toggleThemeId(1)
@@ -285,7 +285,7 @@ fun ColorSelectionRow(
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
-                .background(Blue)
+                .background(Orange)
                 .size(50.sdp)
                 .clickable {
                     viewModel.toggleThemeId(3)

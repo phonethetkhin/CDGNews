@@ -19,6 +19,8 @@ data class ArticlesUIStates(
 
     val isShowFilterDialog: Boolean = false,
 
+    val bookMarkArticles: ArrayList<ArticleEntity> = arrayListOf(),
+
 
     val articlesList: List<ArticleEntity> = listOf(),
 )

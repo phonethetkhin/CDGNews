@@ -1,17 +1,19 @@
 package com.ptk.ptk_news.viewmodel
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ptk.ptk_news.db.entity.SourceEntity
+import com.ptk.ptk_news.model.RemoteResource
 import com.ptk.ptk_news.repository.ArticleRepository
 import com.ptk.ptk_news.ui.ui_states.ArticlesUIStates
 import com.ptk.ptk_news.util.datastore.MyDataStore
+import com.ptk.ptk_news.util.showToast
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -145,47 +147,43 @@ class ArticlesViewModel @Inject constructor(
             else -> "publishedAt"
         }
 
-        Log.e("requestModel1", query.toString())
-        Log.e("requestModel2", sources.toString())
-        Log.e("requestModel3", sortBy.toString())
-        val articlesList = repository.getAllNewsFeedsArticles()
+        val articlesList = repository.getAllArticles()
         _uiStates.update {
             it.copy(
                 showLoadingDialog = false,
                 articlesList = articlesList
             )
         }
+        /* repository.getArticles(query, sources, "popularity", 1).collectLatest { remoteResource ->
+             when (remoteResource) {
+                 is RemoteResource.Loading -> _uiStates.update {
+                     it.copy(showLoadingDialog = true)
+                 }
 
-       /* repository.getArticles(query, sources, "popularity", 1).collectLatest { remoteResource ->
-            when (remoteResource) {
-                is RemoteResource.Loading -> _uiStates.update {
-                    it.copy(showLoadingDialog = true)
-                }
+                 is RemoteResource.Success -> {
+                     if (!remoteResource.data.articles.isNullOrEmpty()) {
+                         repository.insertArticles(remoteResource.data.articles.onEach {
+                             it.isHeadLine = false
+                         })
+                         _uiStates.update {
+                             it.copy(
+                                 showLoadingDialog = false,
+                                 articlesList = remoteResource.data.articles
+                             )
+                         }
+                     }
+                 }
 
-                is RemoteResource.Success -> {
-                    if (!remoteResource.data.articles.isNullOrEmpty()) {
-                        repository.insertArticles(remoteResource.data.articles.onEach {
-                            it.isHeadLine = false
-                        })
-                        _uiStates.update {
-                            it.copy(
-                                showLoadingDialog = false,
-                                articlesList = remoteResource.data.articles
-                            )
-                        }
-                    }
-                }
-
-                is RemoteResource.Failure -> {
-                    _uiStates.update {
-                        it.copy(
-                            showLoadingDialog = false,
-                        )
-                    }
-                    context.showToast(remoteResource.errorMessage.toString())
-                }
-            }
-        }*/
+                 is RemoteResource.Failure -> {
+                     _uiStates.update {
+                         it.copy(
+                             showLoadingDialog = false,
+                         )
+                     }
+                     context.showToast(remoteResource.errorMessage.toString())
+                 }
+             }
+         }*/
     }.await()
 
     //=======================================db function=========================================//
@@ -205,6 +203,15 @@ class ArticlesViewModel @Inject constructor(
             }
         }
     }
+
+    suspend fun getBookMarkArticles() {
+        val bookMarkArticles = repository.getBookMarkArticle()
+        _uiStates.update { it.copy(bookMarkArticles = bookMarkArticles.toCollection(ArrayList())) }
+    }
+
+
+
+
 
     suspend fun getPreferredSources() = dataStore.preferredSources.first()
 

@@ -3,6 +3,7 @@ package com.ptk.ptk_news.model.ui_model
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Article
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Newspaper
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -28,9 +29,9 @@ fun bottomNavigationItems(): List<BottomNavigationItem> = listOf(
     ),
 
     BottomNavigationItem(
-        title = "Preferences",
-        icon = Icons.Filled.Settings,
-        route = Routes.SettingScreen.route,
+        title = "Bookmarks",
+        icon = Icons.Filled.Bookmark,
+        route = Routes.BookMarkScreen.route,
 
         ),
     BottomNavigationItem(

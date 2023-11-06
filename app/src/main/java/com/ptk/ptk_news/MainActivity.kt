@@ -52,11 +52,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            var finishLoad by remember {
+                mutableStateOf(false)
+            }
             var lightColorScheme by remember {
-                mutableStateOf(LightColorSchemeOrange)
+                mutableStateOf(LightColorSchemeBlue)
             }
             var darkColorScheme by remember {
-                mutableStateOf(DarkColorSchemeOrange)
+                mutableStateOf(DarkColorSchemeBlue)
             }
             var typography by remember {
                 mutableStateOf(MediumFontSize)
@@ -78,18 +81,18 @@ class MainActivity : ComponentActivity() {
             )
             LaunchedEffect(Unit) {
                 lightColorScheme = when (dataStore.themeId.first()) {
-                    1 -> LightColorSchemeOrange
+                    1 -> LightColorSchemeBlue
                     2 -> LightColorSchemeYellow
-                    3 -> LightColorSchemeBlue
+                    3 -> LightColorSchemeOrange
                     4 -> LightColorSchemePurple
-                    else -> LightColorSchemeOrange
+                    else -> DarkColorSchemeBlue
                 }
                 darkColorScheme = when (dataStore.themeId.first()) {
-                    1 -> DarkColorSchemeOrange
+                    1 -> DarkColorSchemeBlue
                     2 -> DarkColorSchemeYellow
-                    3 -> DarkColorSchemeBlue
+                    3 -> DarkColorSchemeOrange
                     4 -> DarkColorSchemePurple
-                    else -> DarkColorSchemeOrange
+                    else -> DarkColorSchemeBlue
                 }
                 typography = when (dataStore.textSizeId.first()) {
                     1 -> modifiedSmallFontSize
@@ -97,14 +100,17 @@ class MainActivity : ComponentActivity() {
                     3 -> modifiedLargeFontSize
                     else -> modifiedMediumFontSize
                 }
+                finishLoad = true
             }
 
-            MyTheme(
-                lightColorScheme,
-                darkColorScheme,
-                typography
-            ) {
-                MainComposable()
+            if (finishLoad) {
+                MyTheme(
+                    lightColorScheme,
+                    darkColorScheme,
+                    typography
+                ) {
+                    MainComposable()
+                }
             }
         }
     }

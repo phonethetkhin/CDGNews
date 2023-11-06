@@ -1,17 +1,20 @@
 package com.ptk.ptk_news.viewmodel
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ptk.ptk_news.db.entity.ArticleEntity
 import com.ptk.ptk_news.db.entity.SourceEntity
+import com.ptk.ptk_news.model.RemoteResource
 import com.ptk.ptk_news.repository.ArticleRepository
 import com.ptk.ptk_news.ui.ui_states.NewsFeedUIStates
 import com.ptk.ptk_news.util.datastore.MyDataStore
+import com.ptk.ptk_news.util.showToast
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -208,55 +211,54 @@ class NewsFeedViewModel @Inject constructor(
             } else {
                 sources = ""
             }
-            Log.e("requestMessage1", country)
-            Log.e("requestMessage2", category)
-            Log.e("requestMessage3", sources)
-            Log.e("requestMessage4", query)
-           val articlesList = repository.getAllNewsFeedsArticles()
+            val articlesList = repository.getAllNewsFeedsArticles()
             _uiStates.update {
                 it.copy(
                     showLoadingDialog = false,
                     newsFeedList = articlesList
                 )
             }
-           /* repository.getNewsFeed(country, category, sources, query, pageNum)
-                .collectLatest { remoteResource ->
-                    when (remoteResource) {
-                        is RemoteResource.Loading -> _uiStates.update {
-                            it.copy(showLoadingDialog = true)
-                        }
 
-                        is RemoteResource.Success -> {
-                            if (!remoteResource.data.articles.isNullOrEmpty()) {
+              /*repository.getNewsFeed(country, category, sources, query, pageNum)
+                  .collectLatest { remoteResource ->
+                      when (remoteResource) {
+                          is RemoteResource.Loading -> _uiStates.update {
+                              it.copy(showLoadingDialog = true)
+                          }
 
-                                repository.insertArticles(remoteResource.data.articles.onEach { it.isHeadLine = true })
-                                _uiStates.update {
-                                    it.copy(
-                                        showLoadingDialog = false,
-                                        newsFeedList = remoteResource.data.articles
-                                    )
-                                }
-                            } else {
-                                _uiStates.update {
-                                    it.copy(
-                                        showLoadingDialog = false,
-                                        errorMessage = "No Relevant Data"
-                                    )
-                                }
-                            }
-                        }
+                          is RemoteResource.Success -> {
+                              if (!remoteResource.data.articles.isNullOrEmpty()) {
 
-                        is RemoteResource.Failure -> {
-                            _uiStates.update {
-                                it.copy(
-                                    showLoadingDialog = false,
-                                    errorMessage = "${remoteResource.errorMessage}"
-                                )
-                            }
-                            context.showToast(remoteResource.errorMessage.toString())
-                        }
-                    }
-                }*/
+                                  repository.insertArticles(remoteResource.data.articles.onEach { it.isHeadLine = true })
+
+                                  _uiStates.update {
+                                      it.copy(
+                                          showLoadingDialog = false,
+                                          newsFeedList = remoteResource.data.articles
+                                      )
+                                  }
+                              } else {
+                                  _uiStates.update {
+                                      it.copy(
+                                          showLoadingDialog = false,
+                                          errorMessage = "No Relevant Data"
+                                      )
+                                  }
+                              }
+                          }
+
+                          is RemoteResource.Failure -> {
+
+                              _uiStates.update {
+                                  it.copy(
+                                      showLoadingDialog = false,
+                                      errorMessage = "${remoteResource.errorMessage}"
+                                  )
+                              }
+                              context.showToast(remoteResource.errorMessage.toString())
+                          }
+                      }
+                  }*/
         }.await()
 
     //=======================================db function=========================================//
@@ -281,6 +283,26 @@ class NewsFeedViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    suspend fun insertBookMark(articleEntity: ArticleEntity) {
+        val rowId = repository.insertBookMarks(articleEntity)
+        if (rowId > 0) {
+            _uiStates.update { it.copy(recompose = !_uiStates.value.recompose) }
+            context.showToast("Saved to Bookmarks")
+        }
+    }
+
+    suspend fun removeBookMark(articleEntity: ArticleEntity) {
+        repository.removeBookMarks(articleEntity.id)
+        _uiStates.update { it.copy(recompose = !_uiStates.value.recompose) }
+        context.showToast("Removed from Bookmarks")
+    }
+
+    suspend fun updateIsFav(articleEntity: ArticleEntity) {
+        repository.updateIsFav(!articleEntity.isFav, articleEntity.id)
+        _uiStates.update { it.copy(recompose = !_uiStates.value.recompose) }
+
     }
 
 }
