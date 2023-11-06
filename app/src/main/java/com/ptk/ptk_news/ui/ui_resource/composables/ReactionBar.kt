@@ -43,20 +43,32 @@ fun ReactionBar(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
 
-        CustomIcon(imageVector = Icons.Filled.Favorite, cd = "FavIcon") {
+        CustomIcon(
+            imageVector = Icons.Filled.Favorite,
+            tint = if (articleEntity.isFav) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimary,
+            cd = "FavIcon"
+        ) {
             scope.launch {
                 articleEntity.isFav = !articleEntity.isFav
                 viewModel.updateIsFav(articleEntity)
             }
         }
 
-        CustomIcon(imageVector = Icons.Filled.Comment, cd = "CommentIcon") {
+        CustomIcon(
+            imageVector = Icons.Filled.Comment,
+            MaterialTheme.colorScheme.onPrimary,
+            cd = "CommentIcon"
+        ) {
             viewModel.toggleCommentBoxDialog(true, articleEntity.id)
 
         }
 
 
-        CustomIcon(imageVector = Icons.Filled.Bookmark, cd = "BookMarkIcon") {
+        CustomIcon(
+            imageVector = Icons.Filled.Bookmark,
+            tint = if (articleEntity.isBookMark) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimary,
+            cd = "BookMarkIcon"
+        ) {
             scope.launch {
                 if (!articleEntity.isBookMark) {
                     articleEntity.isBookMark = true
@@ -70,7 +82,11 @@ fun ReactionBar(
             }
         }
 
-        CustomIcon(imageVector = Icons.Filled.Share, cd = "ShareIcon") {
+        CustomIcon(
+            imageVector = Icons.Filled.Share,
+            tint = MaterialTheme.colorScheme.onPrimary,
+            cd = "ShareIcon"
+        ) {
             val sendIntent: Intent = Intent().apply {
                 action = Intent.ACTION_SEND
                 putExtra(Intent.EXTRA_TEXT, "${articleEntity.url}")
@@ -83,10 +99,10 @@ fun ReactionBar(
 }
 
 @Composable
-fun CustomIcon(imageVector: ImageVector, cd: String, onClick: () -> Unit) {
+fun CustomIcon(imageVector: ImageVector, tint: Color, cd: String, onClick: () -> Unit) {
     Icon(
-        imageVector = Icons.Filled.Share,
-        contentDescription = "ShareIcon",
+        imageVector = imageVector,
+        contentDescription = cd,
         modifier = Modifier
             .padding(16.sdp)
             .size(15.sdp)
@@ -100,6 +116,6 @@ fun CustomIcon(imageVector: ImageVector, cd: String, onClick: () -> Unit) {
                     alpha = 0.25F
                 )
             },
-        tint = MaterialTheme.colorScheme.onPrimary
+        tint = tint
     )
 }

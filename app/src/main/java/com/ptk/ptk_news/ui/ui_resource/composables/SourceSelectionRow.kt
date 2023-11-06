@@ -20,11 +20,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import com.ptk.ptk_news.ui.ui_states.ArticleUIStates
-import com.ptk.ptk_news.viewmodel.NewsFeedViewModel
 import ir.kaaveh.sdpcompose.sdp
 
 @Composable
-fun SourceSelectionRow(uiStates: ArticleUIStates, viewModel: NewsFeedViewModel) {
+fun SourceSelectionRow(uiStates: ArticleUIStates, onSelectedSource: (String) -> Unit) {
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(7.sdp),
     ) {
@@ -35,7 +34,7 @@ fun SourceSelectionRow(uiStates: ArticleUIStates, viewModel: NewsFeedViewModel) 
                 .padding(top = 8.sdp)
                 .background(color = MaterialTheme.colorScheme.primary, shape = CircleShape)
                 .clickable {
-                    viewModel.toggleSelectedSources(source.name!!)
+                    onSelectedSource.invoke(source.name!!)
                 }
                 .padding(8.sdp)
             ) {

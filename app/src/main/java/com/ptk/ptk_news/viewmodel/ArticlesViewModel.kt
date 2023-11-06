@@ -75,7 +75,7 @@ class ArticlesViewModel @Inject constructor(
         val activeNetworkInfo = connectivityManager.getActiveNetworkInfo()
         val connected = activeNetworkInfo != null && activeNetworkInfo.isConnected()
 
-        val query = _uiStates.value.searchText
+        val query = _uiStates.value.articleSearchText
         val sources = _uiStates.value.availableSources.filter { it.selected }.map { it.id }
             .joinToString(",")
 
@@ -108,6 +108,14 @@ class ArticlesViewModel @Inject constructor(
                                         articlesList = remoteResource.data.articles
                                     )
                                 }
+                            } else {
+                                _uiStates.update {
+                                    it.copy(
+                                        showLoadingDialog = false,
+                                        errorMessage = "No relevant result",
+                                        articlesList = arrayListOf()
+                                    )
+                                }
                             }
                         }
 
@@ -137,23 +145,5 @@ class ArticlesViewModel @Inject constructor(
         }
     }.await()
 
-
-    //=======================================db function=========================================//
-
-    suspend fun getAllSourcesForArticle() {
-        val dbSources = repository.getAllSourcesFromDB()
-        _uiStates.update { it.copy(availableSources = dbSources) }
-
-
-        if (_uiStates.value.availableSources.isNotEmpty()) {
-            val sources = getPreferredSources()
-            if (sources!!.isNotEmpty()) {
-                val sourcesList = sources.split(",")
-                sourcesList.forEach {
-                    toggleInitialSelectedSources(it)
-                }
-            }
-        }
-    }
 
 }

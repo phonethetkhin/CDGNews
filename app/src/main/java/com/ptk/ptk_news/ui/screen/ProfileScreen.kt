@@ -54,6 +54,7 @@ import com.ptk.ptk_news.ui.ui_resource.theme.Blue
 import com.ptk.ptk_news.ui.ui_resource.theme.Orange
 import com.ptk.ptk_news.ui.ui_resource.theme.Purple
 import com.ptk.ptk_news.ui.ui_resource.theme.Yellow
+import com.ptk.ptk_news.ui.ui_states.ArticleUIStates
 import com.ptk.ptk_news.ui.ui_states.ProfileUIStates
 import com.ptk.ptk_news.util.getComponentActivity
 import com.ptk.ptk_news.viewmodel.NewsFeedViewModel
@@ -70,8 +71,8 @@ fun ProfileScreen(
     profileViewModel: ProfileViewModel = hiltViewModel(),
     newsFeedViewModel: NewsFeedViewModel = hiltViewModel(),
 ) {
-    val uiStates by profileViewModel.profileUIStates.collectAsState()
-    val newsFeedUIStates by newsFeedViewModel.uiStates.collectAsState()
+    val uiStates by newsFeedViewModel.uiStates.collectAsState()
+    val profileUIStates by profileViewModel.profileUIStates.collectAsState()
 
     val context = LocalContext.current
     val activity = context.getComponentActivity() as MainActivity
@@ -115,7 +116,7 @@ fun ProfileScreen(
                     ) {
 
                         ProfileDrawerContent(
-                            newsFeedUIStates, newsFeedViewModel, onDismiss = {
+                            uiStates, newsFeedViewModel, onDismiss = {
                                 if (drawerState.isOpen) {
                                     coroutineScope.launch {
                                         drawerState.close()
@@ -141,7 +142,7 @@ fun ProfileScreen(
 
                 Scaffold() {
 
-                    ProfileScreenContent(uiStates, profileViewModel, activity) {
+                    ProfileScreenContent(uiStates, profileUIStates, profileViewModel, activity) {
                         if (drawerState.isClosed) {
                             coroutineScope.launch {
                                 drawerState.open()
@@ -158,7 +159,8 @@ fun ProfileScreen(
 
 @Composable
 fun ProfileScreenContent(
-    uiStates: ProfileUIStates,
+    uiStates: ArticleUIStates,
+    profileUIStates: ProfileUIStates,
     viewModel: ProfileViewModel,
     activity: MainActivity,
     onEditPreferredButtonClick: () -> Unit,
@@ -176,7 +178,7 @@ fun ProfileScreenContent(
                 modifier = Modifier.padding(8.sdp)
             )
 
-            ColorSelectionRow(uiStates = uiStates, viewModel, activity = activity)
+            ColorSelectionRow(uiStates = uiStates, profileUIStates, viewModel, activity = activity)
 
             Divider()
             Text(
@@ -186,7 +188,12 @@ fun ProfileScreenContent(
                 modifier = Modifier.padding(top = 8.sdp, start = 8.sdp)
             )
 
-            TextSizeSelectionRow(uiStates = uiStates, viewModel = viewModel, activity)
+            TextSizeSelectionRow(
+                uiStates = uiStates,
+                profileUIStates,
+                viewModel = viewModel,
+                activity
+            )
 
             Divider()
 
@@ -237,7 +244,8 @@ fun NameRow() {
 
 @Composable
 fun ColorSelectionRow(
-    uiStates: ProfileUIStates,
+    uiStates: ArticleUIStates,
+    profileUIStates: ProfileUIStates,
     viewModel: ProfileViewModel,
     activity: MainActivity
 ) {
@@ -251,7 +259,7 @@ fun ColorSelectionRow(
 
         ColorBox(
             color = Blue,
-            alpha = if (uiStates.themeId == 1) 1F else 0F,
+            alpha = if (profileUIStates.themeId == 1) 1F else 0F,
             checkTint = Color.White
         ) {
             viewModel.toggleThemeId(1)
@@ -260,7 +268,7 @@ fun ColorSelectionRow(
 
         ColorBox(
             color = Yellow,
-            alpha = if (uiStates.themeId == 2) 1F else 0F,
+            alpha = if (profileUIStates.themeId == 2) 1F else 0F,
             checkTint = Color.Black
         ) {
             viewModel.toggleThemeId(2)
@@ -269,7 +277,7 @@ fun ColorSelectionRow(
 
         ColorBox(
             color = Orange,
-            alpha = if (uiStates.themeId == 3) 1F else 0F,
+            alpha = if (profileUIStates.themeId == 3) 1F else 0F,
             checkTint = Color.White
         ) {
             viewModel.toggleThemeId(3)
@@ -278,7 +286,7 @@ fun ColorSelectionRow(
 
         ColorBox(
             color = Purple,
-            alpha = if (uiStates.themeId == 4) 1F else 0F,
+            alpha = if (profileUIStates.themeId == 4) 1F else 0F,
             checkTint = Color.White
         ) {
             viewModel.toggleThemeId(4)
@@ -318,7 +326,8 @@ fun ColorBox(
 
 @Composable
 fun TextSizeSelectionRow(
-    uiStates: ProfileUIStates,
+    uiStates: ArticleUIStates,
+    profileUIStates: ProfileUIStates,
     viewModel: ProfileViewModel,
     activity: MainActivity
 ) {
@@ -329,10 +338,10 @@ fun TextSizeSelectionRow(
             .padding(start = 4.sdp, top = 4.sdp, bottom = 8.sdp),
         horizontalArrangement = Arrangement.spacedBy(7.sdp),
     ) {
-        uiStates.availableTextSize.forEach { textSizeString ->
+        profileUIStates.availableTextSize.forEach { textSizeString ->
 
 
-            TextSizeListItem(textSizeString, uiStates) {
+            TextSizeListItem(textSizeString, profileUIStates) {
                 viewModel.toggleSelectedTextSizeString(textSizeString)
                 activity.recreate()
             }
@@ -341,13 +350,17 @@ fun TextSizeSelectionRow(
 }
 
 @Composable
-fun TextSizeListItem(textSizeString: String, uiStates: ProfileUIStates, onclick: () -> Unit) {
+fun TextSizeListItem(
+    textSizeString: String,
+    profileUIStates: ProfileUIStates,
+    onclick: () -> Unit
+) {
     val color =
-        if (textSizeString == uiStates.selectedTextSize) MaterialTheme.colorScheme.primary else Color.Transparent
+        if (textSizeString == profileUIStates.selectedTextSize) MaterialTheme.colorScheme.primary else Color.Transparent
     val textColor =
-        if (textSizeString == uiStates.selectedTextSize) Color.White else Color.Black
-    val border = if (textSizeString == uiStates.selectedTextSize) 0.sdp else 1.sdp
-    val alpha = if (textSizeString == uiStates.selectedTextSize) 1F else 0F
+        if (textSizeString == profileUIStates.selectedTextSize) Color.White else Color.Black
+    val border = if (textSizeString == profileUIStates.selectedTextSize) 0.sdp else 1.sdp
+    val alpha = if (textSizeString == profileUIStates.selectedTextSize) 1F else 0F
 
     Row(verticalAlignment = CenterVertically, modifier = Modifier
         .padding(top = 8.sdp)

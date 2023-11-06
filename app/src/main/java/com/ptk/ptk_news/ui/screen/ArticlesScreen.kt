@@ -72,7 +72,6 @@ fun ArticlesScreen(
 
     ) {
     val uiStates by articlesViewModel.uiStates.collectAsState()
-    val newsFeedUIStates by newsFeedViewModel.uiStates.collectAsState()
 
 
     LaunchedEffect(key1 = Unit) {
@@ -94,6 +93,7 @@ fun ArticlesScreen(
         showDialog = uiStates.isShowFilterDialog,
         uiStates,
         newsFeedViewModel,
+        articlesViewModel,
         onDismissRequest = {
             articlesViewModel.resetSelectedValueForArticle()
             articlesViewModel.toggleIsShowFilterSourceDialog(false)
@@ -116,13 +116,13 @@ fun ArticlesScreen(
     }
 
     CommentBoxDialog(
-        showDialog = newsFeedUIStates.showCommentDialog,
+        showDialog = uiStates.showCommentDialog,
         newsFeedViewModel,
-        newsFeedUIStates,
+        uiStates,
         onDismissRequest = { newsFeedViewModel.toggleCommentBoxDialog(false, 0) })
 
     NoConnectionDialog(
-        showDialog = newsFeedUIStates.isShowDisconnectedDialog,
+        showDialog = uiStates.isShowDisconnectedDialog,
         onDismissRequest = { newsFeedViewModel.toggleIsShowDCDialog(false) })
 }
 
@@ -148,7 +148,7 @@ fun ArticlesScreenContent(
         ) {
 
             SearchView(
-                selectedText = uiStates.searchText,
+                selectedText = uiStates.articleSearchText,
                 onSearchValueChanged = viewModel::toggleSearchValueChange,
                 modifier = Modifier.weight(1F)
             ) {
@@ -171,18 +171,39 @@ fun ArticlesScreenContent(
         }
 
         SortByRow(uiStates = uiStates, viewModel = viewModel, scope = scope)
-        ArticleList(
-            navController,
-            uiStates.articlesList,
-            viewModel,
-            newsFeedViewModel
-        )
+        if (uiStates.articlesList.isEmpty() && uiStates.errorMessage.isNotEmpty()) {
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .weight(1F)
+                    .padding(8.sdp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    uiStates.errorMessage,
+                    fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                    color = Color.Black
+                )
+            }
+        } else {
+            ArticleList(
+                navController,
+                uiStates.articlesList,
+                viewModel,
+                newsFeedViewModel
+            )
+        }
     }
 
 }
 
 @Composable
-fun SortByRow(uiStates: ArticleUIStates, viewModel: ArticlesViewModel, scope: CoroutineScope) {
+fun SortByRow(
+    uiStates: ArticleUIStates,
+    viewModel: ArticlesViewModel,
+    scope: CoroutineScope
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()

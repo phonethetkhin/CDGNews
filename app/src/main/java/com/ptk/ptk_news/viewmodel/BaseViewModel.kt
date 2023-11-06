@@ -1,22 +1,18 @@
 package com.ptk.ptk_news.viewmodel
 
 import android.app.Application
-import android.content.Context
-import android.net.ConnectivityManager
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ptk.ptk_news.db.entity.ArticleEntity
 import com.ptk.ptk_news.db.entity.SourceEntity
-import com.ptk.ptk_news.model.RemoteResource
 import com.ptk.ptk_news.repository.ArticleRepository
 import com.ptk.ptk_news.ui.ui_states.ArticleUIStates
 import com.ptk.ptk_news.util.datastore.MyDataStore
 import com.ptk.ptk_news.util.showToast
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -82,7 +78,7 @@ open class BaseViewModel @Inject constructor(
     }
 
     fun toggleSearchValueChange(searchValue: String) {
-        _uiStates.update { it.copy(searchText = searchValue) }
+        _uiStates.update { it.copy(searchText = searchValue, articleSearchText = searchValue) }
     }
 
     fun toggleIsShowDCDialog(isShowDCDialog: Boolean) {
@@ -159,6 +155,7 @@ open class BaseViewModel @Inject constructor(
     }
 
     fun toggleSource(source: String) {
+        Log.e("ajsdfklajsdkf", source.toString())
         _uiStates.update { it.copy(source = source) }
 
         if (source.trim().isNotEmpty()) {
@@ -316,9 +313,20 @@ open class BaseViewModel @Inject constructor(
 
     }
 
-//asdfalsdkfl;aksdlfasd
+    suspend fun getAllSourcesForArticle() {
+        val dbSources = repository.getAllSourcesFromDB()
+        _uiStates.update { it.copy(availableSources = dbSources) }
 
 
-
+        if (_uiStates.value.availableSources.isNotEmpty()) {
+            val sources = getPreferredSources()
+            if (sources!!.isNotEmpty()) {
+                val sourcesList = sources.split(",")
+                sourcesList.forEach {
+                    toggleInitialSelectedSources(it)
+                }
+            }
+        }
+    }
 
 }

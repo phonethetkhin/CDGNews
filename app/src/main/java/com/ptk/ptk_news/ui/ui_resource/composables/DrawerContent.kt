@@ -2,8 +2,6 @@
 
 package com.ptk.ptk_news.ui.ui_resource.composables
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,7 +20,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -107,55 +104,18 @@ fun DrawerContent(
         Divider(Modifier.padding(top = 8.sdp))
 
         if (uiStates.isFilterBySource) {
-            FilterBySourceLayout(uiStates, viewModel, onSave)
+            FilterBySourceLayout(
+                uiStates,
+                onValueChangeToggle = { viewModel.toggleSource(it) },
+                onSourceSelectedToggle = { viewModel.toggleSelectedSources(it) },
+                onSave
+            )
         } else {
             FilterByCategoryLayout(
                 uiStates, viewModel, onSave
             )
         }
 
-    }
-}
-
-@Composable
-fun FilterBySourceLayout(
-    uiStates: ArticleUIStates,
-    viewModel: NewsFeedViewModel,
-    onSave: () -> Unit
-) {
-    Text(
-        text = "Filter by source",
-        fontSize = MaterialTheme.typography.titleLarge.fontSize,
-        color = Color.Black,
-        fontWeight = FontWeight.Bold,
-        modifier = Modifier.padding(8.sdp)
-    )
-    Spacer(modifier = Modifier.height(4.sdp))
-    SourceSelectionRow(uiStates = uiStates, viewModel = viewModel)
-    Spacer(modifier = Modifier.height(8.sdp))
-    OutlinedTextField(
-        onValueChange = viewModel::toggleSource,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 16.sdp, start = 16.sdp, end = 16.sdp)
-            .background(Color.White)
-            .border(1.sdp, color = MaterialTheme.colorScheme.primary),
-        value = uiStates.source,
-    )
-    SourceSuggestionList(uiStates = uiStates, viewModel = viewModel)
-
-    Spacer(modifier = Modifier.height(16.sdp))
-
-
-    MyButton(
-        text = "Save", textColor = Color.White, buttonColor = ButtonDefaults.buttonColors(
-            MaterialTheme.colorScheme.primary
-        ),
-
-        modifier = Modifier.fillMaxWidth()
-    ) {
-
-        onSave.invoke()
     }
 }
 

@@ -19,7 +19,7 @@ import com.ptk.ptk_news.viewmodel.NewsFeedViewModel
 import ir.kaaveh.sdpcompose.sdp
 
 @Composable
-fun SourceSuggestionList(uiStates: ArticleUIStates, viewModel: NewsFeedViewModel) {
+fun SourceSuggestionList(uiStates: ArticleUIStates,  onSelectedSource: (String) -> Unit) {
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
@@ -34,7 +34,9 @@ fun SourceSuggestionList(uiStates: ArticleUIStates, viewModel: NewsFeedViewModel
             Text(
                 it, modifier = Modifier
                     .padding(start = 8.sdp, top = 8.sdp)
-                    .clickable { viewModel.toggleSelectedSources(it) }
+                    .clickable {
+                        onSelectedSource.invoke(it)
+                         }
             )
         }
 

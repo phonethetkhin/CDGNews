@@ -45,7 +45,7 @@ class ArticleRepository @Inject constructor(
                 }
 
                 else -> {
-                    val errorMessage = "Something went wrong:"
+                    val errorMessage = "Something went wrong: ${e.localizedMessage}"
                     send(RemoteResource.Failure(errorMessage = errorMessage))
 
                 }

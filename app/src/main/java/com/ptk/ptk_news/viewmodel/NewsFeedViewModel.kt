@@ -46,7 +46,9 @@ class NewsFeedViewModel @Inject constructor(
                 country = ""
                 category = ""
             } else {
-                sources = ""
+                if (country.isNotEmpty() || category.isNotEmpty()) {
+                    sources = ""
+                }
             }
 
             if (connected) {
@@ -70,11 +72,12 @@ class NewsFeedViewModel @Inject constructor(
                                             newsFeedList = remoteResource.data.articles
                                         )
                                     }
+
                                 } else {
                                     _uiStates.update {
                                         it.copy(
                                             showLoadingDialog = false,
-                                            errorMessage = "No Relevant Data"
+                                            errorMessage = "No relevant result"
                                         )
                                     }
                                 }

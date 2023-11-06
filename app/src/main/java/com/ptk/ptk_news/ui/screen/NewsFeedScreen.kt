@@ -1,6 +1,7 @@
 package com.ptk.ptk_news.ui.screen
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -196,13 +197,30 @@ fun NewsFeedScreenContent(
             viewModel = viewModel,
             scope = scope
         )
-        HeadlinesList(
-            articleList = articleList,
-            navController = navController,
-            articlesViewModel,
-            newsFeedViewModel = viewModel,
-            uiStates
-        )
+        if (uiStates.newsFeedList.isEmpty() && uiStates.errorMessage.isNotEmpty()) {
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .weight(1F)
+                    .padding(8.sdp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    uiStates.errorMessage,
+                    fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                    color = Color.Black
+                )
+            }
+        } else {
+            HeadlinesList(
+                articleList = articleList,
+                navController = navController,
+                articlesViewModel,
+                newsFeedViewModel = viewModel,
+                uiStates
+            )
+        }
     }
 
 }
@@ -294,19 +312,31 @@ fun HeadlinesListItem(
                 )
             }
     ) {
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(article.urlToImage)
-                .crossfade(true)
-                .build(),
-            placeholder = painterResource(R.drawable.placeholder),
-            contentDescription = "ArticleImage",
-            contentScale = ContentScale.FillBounds,
-            modifier = Modifier
-                .clip(RoundedCornerShape(16.sdp))
-                .fillMaxWidth()
-                .height(200.sdp)
-        )
+        if (article.urlToImage != null) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(article.urlToImage)
+                    .crossfade(true)
+                    .build(),
+                placeholder = painterResource(R.drawable.placeholder),
+                contentDescription = "ArticleImage",
+                contentScale = ContentScale.FillBounds,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(16.sdp))
+                    .fillMaxWidth()
+                    .height(200.sdp)
+            )
+        } else {
+            Image(
+                painter = painterResource(id = R.drawable.placeholder),
+                contentDescription = "ArticleImage",
+                contentScale = ContentScale.FillBounds,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(16.sdp))
+                    .fillMaxWidth()
+                    .height(200.sdp)
+            )
+        }
 
         Surface(
             modifier = Modifier.align(Alignment.BottomStart),
