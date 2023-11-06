@@ -88,12 +88,17 @@ class ArticleRepository @Inject constructor(
     suspend fun insertBookMarks(articleEntity: ArticleEntity) =
         articleDao.insertBookMark(articleEntity)
 
-    suspend fun removeBookMarks(articleId:Int) =
+    suspend fun removeBookMarks(articleId: Int) =
         articleDao.removeBookMark(articleId)
 
     suspend fun getAllArticles() = articleDao.getAllArticles()
     suspend fun getBookMarkArticle() = articleDao.getBookMarkArticles()
-    suspend fun updateIsFav(isFav:Boolean, articleId: Int) = articleDao.updateIsFav(isFav, articleId)
+    suspend fun getArticleById(articleId: Int) = articleDao.getArticleById(articleId)
+    suspend fun updateIsFav(isFav: Boolean, articleId: Int) =
+        articleDao.updateIsFav(isFav, articleId)
+
+    suspend fun updateComment(postComment: String, commentTime: String, articleId: Int) =
+        articleDao.updateComment(postComment, commentTime, articleId)
 
 
 }

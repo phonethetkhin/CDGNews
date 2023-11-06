@@ -10,6 +10,7 @@ import com.ptk.ptk_news.util.getCountriesList
 data class NewsFeedUIStates(
 
     val showLoadingDialog: Boolean = false,
+    val showCommentDialog: Boolean = false,
     val errorMessage: String = "",
     val newsFeedList: List<ArticleEntity> = listOf(),
     val isFilterBySource: Boolean = false,
@@ -34,5 +35,14 @@ data class NewsFeedUIStates(
     val availableSources: List<SourceEntity> = listOf(),
 
     val searchText: String = "",
+    val selectedArticleId: Int = 0,
+
+    val commentText: String = "",
+
+    val commentList: ArrayList<String> = arrayListOf(),
+
+    val articleEntity: ArticleEntity? = null,
+
+    val isShowDisconnectedDialog: Boolean = false,
 
     )

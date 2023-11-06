@@ -19,7 +19,7 @@ interface ArticleDao {
     suspend fun removeBookMark(articleId: Int)
 
     @Query("SELECT * FROM tbl_article WHERE id = :articleId")
-    suspend fun getBookMarkArticle(articleId: Int): ArticleEntity?
+    suspend fun getArticleById(articleId: Int): ArticleEntity?
 
     @Query("SELECT * FROM tbl_article WHERE isHeadLine = 1")
     suspend fun getAllNewsFeedsArticles(): List<ArticleEntity>
@@ -32,5 +32,8 @@ interface ArticleDao {
 
     @Query("UPDATE tbl_article SET isFav =:isFav WHERE id =:articleId")
     suspend fun updateIsFav(isFav:Boolean, articleId: Int)
+
+    @Query("UPDATE tbl_article SET postComment=:postComment,commentTime=:commentTime WHERE id =:articleId")
+    suspend fun updateComment(postComment:String, commentTime:String, articleId: Int )
 
 }

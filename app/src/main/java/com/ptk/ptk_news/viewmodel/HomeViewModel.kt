@@ -1,12 +1,14 @@
 package com.ptk.ptk_news.viewmodel
 
 import android.app.Application
+import android.content.Context
+import android.net.ConnectivityManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ptk.ptk_news.db.entity.SourceEntity
 import com.ptk.ptk_news.model.RemoteResource
 import com.ptk.ptk_news.repository.HomeRepository
-import com.ptk.ptk_news.ui.ui_states.HomeUIStates
+import com.ptk.ptk_news.ui.ui_states.NewsFeedUIStates
 import com.ptk.ptk_news.util.datastore.MyDataStore
 import com.ptk.ptk_news.util.showToast
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,7 +27,7 @@ class HomeViewModel @Inject constructor(
 
     ) : ViewModel() {
 
-    val _uiStates = MutableStateFlow(HomeUIStates())
+    val _uiStates = MutableStateFlow(NewsFeedUIStates())
     val uiStates = _uiStates.asStateFlow()
 
     //=======================================states function======================================//
@@ -35,30 +37,31 @@ class HomeViewModel @Inject constructor(
 
 
     suspend fun getSources() = viewModelScope.async {
-        repository.getSources().collectLatest { remoteResource ->
-            when (remoteResource) {
-                is RemoteResource.Loading -> _uiStates.update {
-                    it.copy(showLoadingDialog = true)
-                }
 
-                is RemoteResource.Success -> {
-                    if (remoteResource.data.sources.isNotEmpty()) {
-                        insertAllSources(remoteResource.data.sources)
+            repository.getSources().collectLatest { remoteResource ->
+                when (remoteResource) {
+                    is RemoteResource.Loading -> _uiStates.update {
+                        it.copy(showLoadingDialog = true)
                     }
-                }
 
-                is RemoteResource.Failure -> {
-                    _uiStates.update {
-                        it.copy(
-                            showLoadingDialog = false,
-                        )
+                    is RemoteResource.Success -> {
+                        if (remoteResource.data.sources.isNotEmpty()) {
+                            insertAllSources(remoteResource.data.sources)
+                        }
                     }
-                    context.showToast(remoteResource.errorMessage.toString())
+
+                    is RemoteResource.Failure -> {
+                        _uiStates.update {
+                            it.copy(
+                                showLoadingDialog = false,
+                            )
+                        }
+                        context.showToast(remoteResource.errorMessage.toString())
+                    }
                 }
             }
-        }
-    }.await()
 
+    }.await()
 
 
     //=======================================db function=========================================//

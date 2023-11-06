@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.FilterAltOff
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -46,7 +47,9 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.ptk.ptk_news.R
 import com.ptk.ptk_news.db.entity.ArticleEntity
+import com.ptk.ptk_news.ui.ui_resource.composables.CommentBoxDialog
 import com.ptk.ptk_news.ui.ui_resource.composables.FilterSourceDialog
+import com.ptk.ptk_news.ui.ui_resource.composables.NoConnectionDialog
 import com.ptk.ptk_news.ui.ui_resource.composables.SearchView
 import com.ptk.ptk_news.ui.ui_resource.navigation.Routes
 import com.ptk.ptk_news.ui.ui_states.ArticlesUIStates
@@ -69,6 +72,8 @@ fun ArticlesScreen(
     ) {
     val uiStates by articlesViewModel.uiStates.collectAsState()
     val newsFeedUIStates by newsFeedViewModel.uiStates.collectAsState()
+
+    articlesViewModel._newsFeedUIStates = newsFeedViewModel._uiStates
 
 
     LaunchedEffect(key1 = Unit) {
@@ -100,7 +105,27 @@ fun ArticlesScreen(
             articlesViewModel.toggleIsShowFilterSourceDialog(false)
         }
     }
+    if (uiStates.showLoadingDialog) {
+        Column(
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            CircularProgressIndicator(color = MaterialTheme.colorScheme.secondary)
+        }
+    }
 
+    CommentBoxDialog(
+        showDialog = newsFeedUIStates.showCommentDialog,
+        newsFeedViewModel,
+        newsFeedUIStates,
+        onDismissRequest = { newsFeedViewModel.toggleCommentBoxDialog(false, 0) }) {
+
+    }
+
+    NoConnectionDialog(
+        showDialog = newsFeedUIStates.isShowDisconnectedDialog,
+        onDismissRequest = { newsFeedViewModel.toggleIsShowDCDialog(false) })
 }
 
 @Composable
@@ -215,7 +240,7 @@ fun ArticlesScreenContent(
             }
         }
 
-        ArticleList(navController, uiStates.articlesList, newsFeedViewModel, newsFeedUIStates)
+        ArticleList(navController, uiStates.articlesList,viewModel, newsFeedViewModel, newsFeedUIStates)
     }
 
 }
@@ -224,6 +249,7 @@ fun ArticlesScreenContent(
 fun ColumnScope.ArticleList(
     navController: NavController,
     articleList: List<ArticleEntity>,
+    articlesViewModel: ArticlesViewModel,
     newsFeedViewModel: NewsFeedViewModel,
     newsFeedUIStates: NewsFeedUIStates,
 ) {
@@ -233,14 +259,14 @@ fun ColumnScope.ArticleList(
             .padding(8.sdp)
     ) {
         items(articleList) {
-            ArticleListItem(navController, it, newsFeedViewModel, newsFeedUIStates)
+            ArticleListItem(navController, it,articlesViewModel, newsFeedViewModel, newsFeedUIStates)
         }
     }
 }
 
 @Composable
 fun ArticleListItem(
-    navController: NavController, article: ArticleEntity, newsFeedViewModel: NewsFeedViewModel,
+    navController: NavController, article: ArticleEntity,articlesViewModel: ArticlesViewModel, newsFeedViewModel: NewsFeedViewModel,
     newsFeedUIStates: NewsFeedUIStates,
 ) {
 
@@ -279,7 +305,7 @@ fun ArticleListItem(
         )
 
     }
-    ReactionBar(viewModel = newsFeedViewModel, articleEntity = article, uiStates = newsFeedUIStates)
+    ReactionBar(viewModel = newsFeedViewModel, articleEntity = article, articlesViewModel = articlesViewModel, uiStates = newsFeedUIStates)
     Divider()
 
 }

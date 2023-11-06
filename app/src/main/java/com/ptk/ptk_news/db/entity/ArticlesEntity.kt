@@ -41,13 +41,18 @@ data class ArticleEntity(
     @SerialName("content")
     val content: String? = null,
 
+    var postComment: String? = "",
+    var commentTime: String? = "",
     var isHeadLine: Boolean = false,
     var isBookMark: Boolean = false,
     var isFav: Boolean = false,
+
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
 
     ) : Parcelable {
     constructor(parcel: Parcel) : this(
+        parcel.readString(),
+        parcel.readString(),
         parcel.readString(),
         parcel.readString(),
         parcel.readString(),
@@ -70,6 +75,8 @@ data class ArticleEntity(
         parcel.writeString(title)
         parcel.writeString(url)
         parcel.writeString(content)
+        parcel.writeString(postComment)
+        parcel.writeString(commentTime)
         parcel.writeByte(if (isHeadLine) 1 else 0)
         parcel.writeByte(if (isBookMark) 1 else 0)
         parcel.writeByte(if (isFav) 1 else 0)
@@ -89,5 +96,4 @@ data class ArticleEntity(
             return arrayOfNulls(size)
         }
     }
-
 }

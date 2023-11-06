@@ -1,5 +1,6 @@
 package com.ptk.ptk_news.ui.screen
 
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -19,12 +20,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,13 +41,17 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.ptk.ptk_news.R
 import com.ptk.ptk_news.db.entity.ArticleEntity
 import com.ptk.ptk_news.util.getConvertDate
+import com.ptk.ptk_news.viewmodel.ArticlesViewModel
+import com.ptk.ptk_news.viewmodel.NewsFeedViewModel
 import ir.kaaveh.sdpcompose.sdp
+import kotlinx.coroutines.launch
 
 
 //UIs
@@ -50,25 +59,35 @@ import ir.kaaveh.sdpcompose.sdp
 fun DetailScreen(
     navController: NavController,
     articleEntity: ArticleEntity,
-
-    ) {
+    viewModel: NewsFeedViewModel = hiltViewModel(),
+    articlesViewModel: ArticlesViewModel = hiltViewModel(),
+) {
+    val uiStates by viewModel.uiStates.collectAsState()
 
 
     LaunchedEffect(key1 = Unit) {
-//        newsFeedViewModel.getNewsFeed()
+        viewModel.setArticleEntity(articleEntity)
     }
-    DetailScreenContent(articleEntity, navController)
+    if (uiStates.articleEntity != null) {
+        DetailScreenContent(uiStates.articleEntity!!, navController, viewModel, articlesViewModel)
+    }
 
 
 }
 
 @Composable
-fun DetailScreenContent(articleEntity: ArticleEntity, navController: NavController) {
+fun DetailScreenContent(
+    articleEntity: ArticleEntity,
+    navController: NavController,
+    viewModel: NewsFeedViewModel,
+    articlesViewModel: ArticlesViewModel
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
+        val context = LocalContext.current
         Box {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
@@ -84,25 +103,55 @@ fun DetailScreenContent(articleEntity: ArticleEntity, navController: NavControll
                     .clip(RoundedCornerShape(4.sdp))
             )
 
-            Icon(
-                imageVector = Icons.Filled.ArrowBackIosNew,
-                contentDescription = "BackIcon",
-                modifier = Modifier
-                    .padding(16.sdp)
-                    .drawBehind {
-                        drawCircle(
-                            color = Color.Black,
-                            radius = this.size.minDimension,
-                            alpha = 0.25F
-                        )
-                    }
-                    .clickable { navController.navigateUp() },
-                tint = Color.White
-            )
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.ArrowBackIosNew,
+                    contentDescription = "BackIcon",
+                    modifier = Modifier
+                        .padding(16.sdp)
+                        .drawBehind {
+                            drawCircle(
+                                color = Color.Black,
+                                radius = this.size.minDimension,
+                                alpha = 0.25F
+                            )
+                        }
+                        .clickable { navController.navigateUp() },
+                    tint = Color.White
+                )
+                Icon(
+                    imageVector = Icons.Filled.Share,
+                    contentDescription = "ShareIcon",
+                    modifier = Modifier
+                        .padding(16.sdp)
+                        .drawBehind {
+                            drawCircle(
+                                color = Color.Black,
+                                radius = this.size.minDimension,
+                                alpha = 0.25F
+                            )
+                        }
+                        .clickable {
+                            val sendIntent: Intent = Intent().apply {
+                                action = Intent.ACTION_SEND
+                                putExtra(Intent.EXTRA_TEXT, "${articleEntity.url}")
+                                type = "text/plain"
+                            }
+                            val shareIntent = Intent.createChooser(sendIntent, null)
+                            context.startActivity(shareIntent)
+                        },
+                    tint = Color.White
+                )
+            }
         }
         Row(
             modifier = Modifier.fillMaxWidth()
         ) {
+            val scope = rememberCoroutineScope()
             Text(
                 articleEntity.title ?: "-",
                 fontSize = MaterialTheme.typography.bodyLarge.fontSize,
@@ -115,25 +164,46 @@ fun DetailScreenContent(articleEntity: ArticleEntity, navController: NavControll
             Column {
                 Icon(
                     imageVector = Icons.Filled.Favorite,
-                    "FavoriteIcon",
+                    contentDescription = "FavIcon",
                     modifier = Modifier
-                        .size(40.sdp)
-                        .padding(8.sdp),
+
+                        .padding(16.sdp)
+                        .size(15.sdp)
+                        .clickable {
+                            scope.launch {
+                                articleEntity.isFav = !articleEntity.isFav
+                                viewModel.updateIsFav(articleEntity)
+                            }
+                        }
+                        .drawBehind {
+                            drawCircle(
+                                color = Color.Black,
+                                radius = this.size.minDimension,
+                                alpha = 0.25F
+                            )
+                        },
                     tint = if (articleEntity.isFav) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimary
                 )
                 Icon(
                     imageVector = Icons.Filled.Bookmark,
-                    "BookMarkIcon",
+                    contentDescription = "BookMarkIcon",
                     modifier = Modifier
-                        .clickable {
-                            /*  scope.launch {
-                                  articleEntity.isFav = !articleEntity.isFav
-                                  viewModel.updateIsFav(articleEntity)
-                              }*/
-                        }
 
-                        .size(40.sdp)
-                        .padding(8.sdp)
+                        .padding(16.sdp)
+                        .size(15.sdp)
+                        .clickable {
+                            scope.launch {
+                                if (!articleEntity.isBookMark) {
+                                    articleEntity.isBookMark = true
+                                    viewModel.insertBookMark(articleEntity)
+                                } else {
+                                    articleEntity.isBookMark = false
+                                    viewModel.removeBookMark(articleEntity)
+                                    articlesViewModel.getBookMarkArticles()
+
+                                }
+                            }
+                        }
                         .drawBehind {
                             drawCircle(
                                 color = Color.Black,

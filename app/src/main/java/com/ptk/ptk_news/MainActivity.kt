@@ -26,6 +26,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.ptk.ptk_news.model.ui_model.bottomNavigationItems
 import com.ptk.ptk_news.ui.ui_resource.navigation.NavGraph
+import com.ptk.ptk_news.ui.ui_resource.navigation.Routes
 import com.ptk.ptk_news.ui.ui_resource.theme.DarkColorSchemeBlue
 import com.ptk.ptk_news.ui.ui_resource.theme.DarkColorSchemeOrange
 import com.ptk.ptk_news.ui.ui_resource.theme.DarkColorSchemePurple
@@ -129,47 +130,49 @@ fun MainComposable() {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.primary,
-            ) {
-                //getting the list of bottom navigation items for our data class
-                bottomNavigationItems().forEachIndexed { index, navigationItem ->
-                    //iterating all items with their respective indexes
-                    NavigationBarItem(
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.onPrimary,
-                            unselectedIconColor = MaterialTheme.colorScheme.onPrimary,
-                            selectedTextColor = MaterialTheme.colorScheme.secondary,
-                            unselectedTextColor = MaterialTheme.colorScheme.onPrimary,
-                            indicatorColor = MaterialTheme.colorScheme.secondary
-                        ),
-                        selected = currentRoute?.hierarchy?.any {
-                            navigationItem.route == it.route
-                        } == true,
+            if (currentRoute?.route != null && currentRoute.route != Routes.SplashScreen.route) {
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                ) {
+                    //getting the list of bottom navigation items for our data class
+                    bottomNavigationItems().forEachIndexed { index, navigationItem ->
+                        //iterating all items with their respective indexes
+                        NavigationBarItem(
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.onPrimary,
+                                unselectedIconColor = MaterialTheme.colorScheme.onPrimary,
+                                selectedTextColor = MaterialTheme.colorScheme.secondary,
+                                unselectedTextColor = MaterialTheme.colorScheme.onPrimary,
+                                indicatorColor = MaterialTheme.colorScheme.secondary
+                            ),
+                            selected = currentRoute.hierarchy?.any {
+                                navigationItem.route == it.route
+                            } == true,
 
-                        icon = {
-                            Icon(
-                                navigationItem.icon,
-                                contentDescription = "NavigationBottomViewIcon",
-                                modifier = Modifier.size(25.sdp)
-                            )
-                        },
-                        onClick = {
-                            navigationSelectedItem = index
-                            navController.navigate(navigationItem.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    navigationSelectedItem = index
+                            icon = {
+                                Icon(
+                                    navigationItem.icon,
+                                    contentDescription = "NavigationBottomViewIcon",
+                                    modifier = Modifier.size(25.sdp)
+                                )
+                            },
+                            onClick = {
+                                navigationSelectedItem = index
+                                navController.navigate(navigationItem.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        navigationSelectedItem = index
 
-                                    saveState = true
-                                    Log.e("TESTASDF", navigationSelectedItem.toString())
+                                        saveState = true
+                                        Log.e("TESTASDF", navigationSelectedItem.toString())
 
+                                    }
+
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
-
-                                launchSingleTop = true
-                                restoreState = true
                             }
-                        }
-                    )
+                        )
+                    }
                 }
             }
         }
@@ -180,5 +183,6 @@ fun MainComposable() {
             navController,
         )
     }
+
 
 }

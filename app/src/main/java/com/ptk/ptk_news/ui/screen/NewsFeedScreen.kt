@@ -61,11 +61,14 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.ptk.ptk_news.R
 import com.ptk.ptk_news.db.entity.ArticleEntity
+import com.ptk.ptk_news.ui.ui_resource.composables.CommentBoxDialog
 import com.ptk.ptk_news.ui.ui_resource.composables.DrawerContent
+import com.ptk.ptk_news.ui.ui_resource.composables.NoConnectionDialog
 import com.ptk.ptk_news.ui.ui_resource.composables.SearchView
 import com.ptk.ptk_news.ui.ui_resource.navigation.Routes
 import com.ptk.ptk_news.ui.ui_states.NewsFeedUIStates
 import com.ptk.ptk_news.util.navigate
+import com.ptk.ptk_news.viewmodel.ArticlesViewModel
 import com.ptk.ptk_news.viewmodel.NewsFeedViewModel
 import ir.kaaveh.sdpcompose.sdp
 import ir.kaaveh.sdpcompose.ssp
@@ -78,6 +81,7 @@ import kotlinx.coroutines.launch
 fun NewsFeedScreen(
     navController: NavController,
     newsFeedViewModel: NewsFeedViewModel = hiltViewModel(),
+    articlesViewModel: ArticlesViewModel = hiltViewModel(),
 
     ) {
     val uiStates by newsFeedViewModel.uiStates.collectAsState()
@@ -139,6 +143,7 @@ fun NewsFeedScreen(
                     NewsFeedScreenContent(
                         drawerState,
                         uiStates.newsFeedList,
+                        articlesViewModel,
                         uiStates,
                         newsFeedViewModel,
                         navController
@@ -158,6 +163,17 @@ fun NewsFeedScreen(
             CircularProgressIndicator(color = MaterialTheme.colorScheme.secondary)
         }
     }
+    CommentBoxDialog(
+        showDialog = uiStates.showCommentDialog,
+        newsFeedViewModel,
+        uiStates,
+        onDismissRequest = { newsFeedViewModel.toggleCommentBoxDialog(false, 0) }) {
+
+    }
+
+    NoConnectionDialog(
+        showDialog = uiStates.isShowDisconnectedDialog,
+        onDismissRequest = { newsFeedViewModel.toggleIsShowDCDialog(false) })
 
 }
 
@@ -165,6 +181,7 @@ fun NewsFeedScreen(
 fun NewsFeedScreenContent(
     drawerState: DrawerState,
     articleList: List<ArticleEntity>,
+    articlesViewModel: ArticlesViewModel,
     uiStates: NewsFeedUIStates,
     viewModel: NewsFeedViewModel,
     navController: NavController,
@@ -217,6 +234,7 @@ fun NewsFeedScreenContent(
         HeadlinesList(
             articleList = articleList,
             navController = navController,
+            articlesViewModel,
             newsFeedViewModel = viewModel,
             uiStates
         )
@@ -228,6 +246,7 @@ fun NewsFeedScreenContent(
 fun ColumnScope.HeadlinesList(
     articleList: List<ArticleEntity>,
     navController: NavController,
+    articlesViewModel: ArticlesViewModel,
     newsFeedViewModel: NewsFeedViewModel,
     uiStates: NewsFeedUIStates,
 ) {
@@ -237,7 +256,7 @@ fun ColumnScope.HeadlinesList(
             .padding(horizontal = 8.sdp)
     ) {
         items(articleList) {
-            HeadlinesListItem(it, navController, newsFeedViewModel, uiStates)
+            HeadlinesListItem(it, navController, articlesViewModel, newsFeedViewModel, uiStates)
 
         }
     }
@@ -247,6 +266,7 @@ fun ColumnScope.HeadlinesList(
 fun HeadlinesListItem(
     article: ArticleEntity,
     navController: NavController,
+    articlesViewModel: ArticlesViewModel,
     viewModel: NewsFeedViewModel,
     uiStates: NewsFeedUIStates,
 ) {
@@ -291,7 +311,7 @@ fun HeadlinesListItem(
         }
 
     }
-    ReactionBar(viewModel = viewModel, article, uiStates)
+    ReactionBar(viewModel = viewModel, articlesViewModel, article, uiStates)
     Spacer(modifier = Modifier.height(16.sdp))
     Divider()
 }
@@ -299,6 +319,7 @@ fun HeadlinesListItem(
 @Composable
 fun ReactionBar(
     viewModel: NewsFeedViewModel,
+    articlesViewModel: ArticlesViewModel,
     articleEntity: ArticleEntity,
     uiStates: NewsFeedUIStates
 ) {
@@ -338,6 +359,9 @@ fun ReactionBar(
             modifier = Modifier
                 .padding(16.sdp)
                 .size(15.sdp)
+                .clickable {
+                    viewModel.toggleCommentBoxDialog(true, articleEntity.id)
+                }
                 .drawBehind {
                     drawCircle(
                         color = Color.Black,
@@ -364,6 +388,8 @@ fun ReactionBar(
                         } else {
                             articleEntity.isBookMark = false
                             viewModel.removeBookMark(articleEntity)
+                            articlesViewModel.getBookMarkArticles()
+
                         }
                     }
                 }

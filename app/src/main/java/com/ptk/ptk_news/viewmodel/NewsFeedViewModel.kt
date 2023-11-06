@@ -1,6 +1,8 @@
 package com.ptk.ptk_news.viewmodel
 
 import android.app.Application
+import android.content.Context
+import android.net.ConnectivityManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ptk.ptk_news.db.entity.ArticleEntity
@@ -18,6 +20,8 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
@@ -79,6 +83,79 @@ class NewsFeedViewModel @Inject constructor(
 
     fun toggleSearchValueChange(searchValue: String) {
         _uiStates.update { it.copy(searchText = searchValue) }
+    }
+
+    fun toggleIsShowDCDialog(isShowDCDialog: Boolean) {
+        _uiStates.update { it.copy(isShowDisconnectedDialog = isShowDCDialog) }
+    }
+
+    fun toggleCommentBoxDialog(isShowCommentDialog: Boolean, articleId: Int) {
+        _uiStates.update {
+            it.copy(
+                showCommentDialog = isShowCommentDialog,
+                selectedArticleId = articleId
+            )
+        }
+        if (isShowCommentDialog) {
+            getExistingComment()
+        } else {
+            _uiStates.update { it.copy(commentList = arrayListOf(), commentText = "") }
+        }
+    }
+
+    fun toggleCommentText(cmtText: String) {
+        _uiStates.update { it.copy(commentText = cmtText) }
+    }
+
+    fun setArticleEntity(articleEntity: ArticleEntity) {
+        _uiStates.update { it.copy(articleEntity = articleEntity) }
+    }
+
+    fun getExistingComment() {
+        viewModelScope.launch {
+            val articleId = _uiStates.value.selectedArticleId
+            val article = repository.getArticleById(articleId)
+            val commentList = arrayListOf<String>()
+            if (!article?.postComment.isNullOrEmpty()) {
+                val splitList = article!!.postComment?.split(",")
+                if (!splitList.isNullOrEmpty()) {
+                    commentList.addAll(splitList.toCollection(ArrayList()))
+                    _uiStates.update {
+                        it.copy(
+                            commentList = commentList,
+                            recompose = !_uiStates.value.recompose
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun postComment() {
+        viewModelScope.launch {
+            val articleId = _uiStates.value.selectedArticleId
+            val article = repository.getArticleById(articleId)
+            val commentList = arrayListOf<String>()
+            if (!article?.postComment.isNullOrEmpty()) {
+                val splitList = article!!.postComment?.split(",")
+                if (!splitList.isNullOrEmpty()) {
+                    commentList.addAll(splitList.toCollection(ArrayList()))
+                }
+            }
+
+            val post = _uiStates.value.commentText
+            commentList.add(post)
+
+            val sdf = SimpleDateFormat("dd/M/yyyy hh:mm aaa")
+            val commentTime = sdf.format(Date())
+            repository.updateComment(commentList.joinToString(","), commentTime, articleId)
+            _uiStates.update {
+                it.copy(
+                    commentList = commentList,
+                    recompose = !_uiStates.value.recompose
+                )
+            }
+        }
     }
 
     fun toggleSource(source: String) {
@@ -194,6 +271,11 @@ class NewsFeedViewModel @Inject constructor(
     //=======================================api function=========================================//
     suspend fun getNewsFeed(pageNum: Int = 1) =
         viewModelScope.async {
+            val connectivityManager =
+                context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+            val activeNetworkInfo = connectivityManager.getActiveNetworkInfo()
+            val connected = activeNetworkInfo != null && activeNetworkInfo.isConnected()
 
             var country =
                 _uiStates.value.availableCountries.find { it.name != "All Countries" && it.name == _uiStates.value.selectedCountry }?.code
@@ -211,54 +293,63 @@ class NewsFeedViewModel @Inject constructor(
             } else {
                 sources = ""
             }
-            val articlesList = repository.getAllNewsFeedsArticles()
-            _uiStates.update {
-                it.copy(
-                    showLoadingDialog = false,
-                    newsFeedList = articlesList
-                )
+
+            if (connected) {
+                repository.getNewsFeed(country, category, sources, query, pageNum)
+                    .collectLatest { remoteResource ->
+                        when (remoteResource) {
+                            is RemoteResource.Loading -> _uiStates.update {
+                                it.copy(showLoadingDialog = true)
+                            }
+
+                            is RemoteResource.Success -> {
+                                if (!remoteResource.data.articles.isNullOrEmpty()) {
+
+                                    repository.insertArticles(remoteResource.data.articles.onEach {
+                                        it.isHeadLine = true
+                                    })
+
+                                    _uiStates.update {
+                                        it.copy(
+                                            showLoadingDialog = false,
+                                            newsFeedList = remoteResource.data.articles
+                                        )
+                                    }
+                                } else {
+                                    _uiStates.update {
+                                        it.copy(
+                                            showLoadingDialog = false,
+                                            errorMessage = "No Relevant Data"
+                                        )
+                                    }
+                                }
+                            }
+
+                            is RemoteResource.Failure -> {
+
+                                _uiStates.update {
+                                    it.copy(
+                                        showLoadingDialog = false,
+                                        errorMessage = "${remoteResource.errorMessage}"
+                                    )
+                                }
+                                context.showToast(remoteResource.errorMessage.toString())
+                            }
+                        }
+                    }
+            } else {
+                val articlesList = repository.getAllNewsFeedsArticles()
+                if (articlesList.isEmpty()) {
+                    _uiStates.update { it.copy(isShowDisconnectedDialog = true) }
+                } else {
+                    _uiStates.update {
+                        it.copy(
+                            showLoadingDialog = false,
+                            newsFeedList = articlesList
+                        )
+                    }
+                }
             }
-
-              /*repository.getNewsFeed(country, category, sources, query, pageNum)
-                  .collectLatest { remoteResource ->
-                      when (remoteResource) {
-                          is RemoteResource.Loading -> _uiStates.update {
-                              it.copy(showLoadingDialog = true)
-                          }
-
-                          is RemoteResource.Success -> {
-                              if (!remoteResource.data.articles.isNullOrEmpty()) {
-
-                                  repository.insertArticles(remoteResource.data.articles.onEach { it.isHeadLine = true })
-
-                                  _uiStates.update {
-                                      it.copy(
-                                          showLoadingDialog = false,
-                                          newsFeedList = remoteResource.data.articles
-                                      )
-                                  }
-                              } else {
-                                  _uiStates.update {
-                                      it.copy(
-                                          showLoadingDialog = false,
-                                          errorMessage = "No Relevant Data"
-                                      )
-                                  }
-                              }
-                          }
-
-                          is RemoteResource.Failure -> {
-
-                              _uiStates.update {
-                                  it.copy(
-                                      showLoadingDialog = false,
-                                      errorMessage = "${remoteResource.errorMessage}"
-                                  )
-                              }
-                              context.showToast(remoteResource.errorMessage.toString())
-                          }
-                      }
-                  }*/
         }.await()
 
     //=======================================db function=========================================//
@@ -300,7 +391,7 @@ class NewsFeedViewModel @Inject constructor(
     }
 
     suspend fun updateIsFav(articleEntity: ArticleEntity) {
-        repository.updateIsFav(!articleEntity.isFav, articleEntity.id)
+        repository.updateIsFav(articleEntity.isFav, articleEntity.id)
         _uiStates.update { it.copy(recompose = !_uiStates.value.recompose) }
 
     }
