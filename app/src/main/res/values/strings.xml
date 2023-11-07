@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">PTKNews</string>
+    <string name="app_name">CDGNews</string>
 
     <string name="connection_error_message">Please check your server connection.</string>
 

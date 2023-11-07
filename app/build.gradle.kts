@@ -12,11 +12,11 @@ val navVersion = "2.7.0"
 val retrofit_version = "2.9.0"
 val room_version = "2.5.2"
 android {
-    namespace = "com.ptk.ptk_news"
+    namespace = "com.cdg.cdg_news"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.ptk.ptk_news"
+        applicationId = "com.cdg.cdg_news"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
