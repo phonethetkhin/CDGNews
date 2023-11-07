@@ -5,8 +5,11 @@ package com.ptk.ptk_news.ui.ui_resource.composables
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -23,7 +26,6 @@ import androidx.compose.ui.window.Dialog
 import com.ptk.ptk_news.ui.ui_resource.theme.Red
 import com.ptk.ptk_news.ui.ui_states.ArticleUIStates
 import com.ptk.ptk_news.viewmodel.ArticlesViewModel
-import com.ptk.ptk_news.viewmodel.NewsFeedViewModel
 import ir.kaaveh.sdpcompose.sdp
 
 @Composable
@@ -52,21 +54,21 @@ fun FilterSourceDialog(
                         .padding(16.sdp)
                         .verticalScroll(rememberScrollState())
                 ) {
-
+                    Spacer(modifier = Modifier.height(16.sdp))
                     Icon(
                         imageVector = Icons.Filled.Close,
                         contentDescription = "Close Icon",
                         tint = Color.White,
                         modifier = Modifier
-                            .align(Alignment.End)
                             .padding(end = 4.sdp)
                             .clickable { onDismissRequest.invoke() }
                             .drawBehind {
                                 drawCircle(
                                     color = Red,
-                                    radius = this.size.maxDimension
+                                    radius = this.size.minDimension
                                 )
                             }
+                            .size(15.sdp).align(Alignment.End)
                     )
 
                     FilterBySourceLayout(

@@ -18,7 +18,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.Divider
@@ -171,9 +173,11 @@ fun ProfileScreenContent(
     onEditPreferredButtonClick: () -> Unit,
 ) {
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+
     ) {
-        Column(modifier = Modifier.weight(1F)) {
+        Column(modifier = Modifier.weight(1F).verticalScroll(rememberScrollState())) {
             NameRow()
             Divider(modifier = Modifier.fillMaxWidth())
             Text(
@@ -393,7 +397,7 @@ fun TextSizeListItem(
             imageVector = Icons.Filled.CheckCircle,
             contentDescription = "CheckIcon",
             modifier = Modifier
-                .alpha(alpha),
+                .size(25.sdp).alpha(alpha),
             tint = Color.White
         )
 

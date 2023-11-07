@@ -166,7 +166,7 @@ fun MainComposable() {
                                 Icon(
                                     navigationItem.icon,
                                     contentDescription = "NavigationBottomViewIcon",
-                                    modifier = Modifier.size(25.sdp)
+                                    modifier = Modifier.size(20.sdp)
                                 )
                             },
                             onClick = {

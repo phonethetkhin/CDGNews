@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -58,7 +59,7 @@ fun CommentBoxDialog(
         ) {
 
             Card(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().padding(8.sdp),
                 colors = CardDefaults.cardColors(
                     containerColor = Color.White,
                 )
@@ -79,9 +80,11 @@ fun CommentBoxDialog(
                             .drawBehind {
                                 drawCircle(
                                     color = Red,
-                                    radius = this.size.maxDimension
+                                    radius = this.size.minDimension
                                 )
                             }
+                            .size(15.sdp)
+
                             .align(Alignment.End)
                     )
                     Spacer(modifier = Modifier.height(16.sdp))
@@ -207,5 +210,7 @@ fun ColumnScope.BottomBar(
                 onPostComment.invoke()
             }
             .padding(8.sdp)
+            .size(25.sdp)
+
     )
 }

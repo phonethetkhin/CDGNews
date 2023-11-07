@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -94,9 +95,10 @@ fun DrawerContent(
                     .drawBehind {
                         drawCircle(
                             color = Red,
-                            radius = this.size.maxDimension
+                            radius = this.size.minDimension
                         )
                     }
+                    .size(15.sdp)
             )
 
         }

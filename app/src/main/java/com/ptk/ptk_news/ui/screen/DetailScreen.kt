@@ -168,6 +168,7 @@ fun TopDetailBox(articleEntity: ArticleEntity, navController: NavController) {
                             alpha = 0.25F
                         )
                     }
+                    .size(15.sdp)
                     .clickable { navController.navigateUp() },
                 tint = Color.White
             )
@@ -183,6 +184,7 @@ fun TopDetailBox(articleEntity: ArticleEntity, navController: NavController) {
                             alpha = 0.25F
                         )
                     }
+                    .size(15.sdp)
                     .clickable {
                         val sendIntent: Intent = Intent().apply {
                             action = Intent.ACTION_SEND
