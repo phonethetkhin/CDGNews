@@ -1,6 +1,7 @@
 package com.ptk.ptk_news.ui.screen
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -64,7 +65,6 @@ import com.ptk.ptk_news.ui.ui_resource.composables.SearchView
 import com.ptk.ptk_news.ui.ui_resource.navigation.Routes
 import com.ptk.ptk_news.ui.ui_states.ArticleUIStates
 import com.ptk.ptk_news.util.navigate
-import com.ptk.ptk_news.viewmodel.ArticlesViewModel
 import com.ptk.ptk_news.viewmodel.NewsFeedViewModel
 import ir.kaaveh.sdpcompose.sdp
 import ir.kaaveh.sdpcompose.ssp
@@ -78,7 +78,6 @@ import kotlinx.coroutines.launch
 fun NewsFeedScreen(
     navController: NavController,
     newsFeedViewModel: NewsFeedViewModel = hiltViewModel(),
-    articlesViewModel: ArticlesViewModel = hiltViewModel(),
 
     ) {
     val uiStates by newsFeedViewModel.uiStates.collectAsState()
@@ -141,7 +140,6 @@ fun NewsFeedScreen(
                     NewsFeedScreenContent(
                         drawerState,
                         uiStates.newsFeedList,
-                        articlesViewModel,
                         uiStates,
                         newsFeedViewModel,
                         navController
@@ -164,8 +162,9 @@ fun NewsFeedScreen(
 
     CommentBoxDialog(
         showDialog = uiStates.showCommentDialog,
-        newsFeedViewModel,
-        uiStates,
+        uiStates = uiStates,
+        toggleCommentText = { newsFeedViewModel.toggleCommentText(it) },
+        onPostComment = { newsFeedViewModel.postComment() },
         onDismissRequest = { newsFeedViewModel.toggleCommentBoxDialog(false, 0) })
 
 
@@ -179,7 +178,6 @@ fun NewsFeedScreen(
 fun NewsFeedScreenContent(
     drawerState: DrawerState,
     articleList: List<ArticleEntity>,
-    articlesViewModel: ArticlesViewModel,
     uiStates: ArticleUIStates,
     viewModel: NewsFeedViewModel,
     navController: NavController,
@@ -216,9 +214,7 @@ fun NewsFeedScreenContent(
             HeadlinesList(
                 articleList = articleList,
                 navController = navController,
-                articlesViewModel,
                 newsFeedViewModel = viewModel,
-                uiStates
             )
         }
     }
@@ -275,9 +271,7 @@ fun SearchRow(
 fun ColumnScope.HeadlinesList(
     articleList: List<ArticleEntity>,
     navController: NavController,
-    articlesViewModel: ArticlesViewModel,
     newsFeedViewModel: NewsFeedViewModel,
-    uiStates: ArticleUIStates,
 ) {
     LazyColumn(
         modifier = Modifier
@@ -285,7 +279,7 @@ fun ColumnScope.HeadlinesList(
             .padding(horizontal = 8.sdp)
     ) {
         items(articleList) {
-            HeadlinesListItem(it, navController, articlesViewModel, newsFeedViewModel, uiStates)
+            HeadlinesListItem(it, navController, newsFeedViewModel)
 
         }
     }
@@ -295,9 +289,7 @@ fun ColumnScope.HeadlinesList(
 fun HeadlinesListItem(
     article: ArticleEntity,
     navController: NavController,
-    articlesViewModel: ArticlesViewModel,
     viewModel: NewsFeedViewModel,
-    uiStates: ArticleUIStates,
 ) {
     Spacer(modifier = Modifier.height(16.sdp))
 
@@ -312,7 +304,7 @@ fun HeadlinesListItem(
                 )
             }
     ) {
-        if (article.urlToImage != null) {
+        if (!article.urlToImage.isNullOrEmpty()) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(article.urlToImage)
@@ -352,7 +344,42 @@ fun HeadlinesListItem(
         }
 
     }
-    ReactionBar(viewModel = viewModel, articlesViewModel, article)
+    val context = LocalContext.current
+
+    val scope = rememberCoroutineScope()
+    ReactionBar(
+        articleEntity = article,
+        favOnClick = {
+            scope.launch {
+                article.isFav = !article.isFav
+                viewModel.updateIsFav(article)
+            }
+        },
+        commentOnClick = {
+            viewModel.toggleCommentBoxDialog(true, article.id)
+
+        },
+        bookMarkOnClick = {
+            scope.launch {
+                if (!article.isBookMark) {
+                    article.isBookMark = true
+                    viewModel.insertBookMark(article)
+                } else {
+                    article.isBookMark = false
+                    viewModel.removeBookMark(article)
+                    viewModel.getBookMarkArticles()
+                }
+            }
+        },
+        shareOnClick = {
+            val sendIntent: Intent = Intent().apply {
+                action = Intent.ACTION_SEND
+                putExtra(Intent.EXTRA_TEXT, "${article.url}")
+                type = "text/plain"
+            }
+            val shareIntent = Intent.createChooser(sendIntent, null)
+            context.startActivity(shareIntent)
+        })
     Spacer(modifier = Modifier.height(16.sdp))
     Divider()
 }

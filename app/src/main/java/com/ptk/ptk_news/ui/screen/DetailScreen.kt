@@ -1,6 +1,7 @@
 package com.ptk.ptk_news.ui.screen
 
 import android.content.Intent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -48,7 +49,6 @@ import coil.request.ImageRequest
 import com.ptk.ptk_news.R
 import com.ptk.ptk_news.db.entity.ArticleEntity
 import com.ptk.ptk_news.util.getConvertDate
-import com.ptk.ptk_news.viewmodel.ArticlesViewModel
 import com.ptk.ptk_news.viewmodel.NewsFeedViewModel
 import ir.kaaveh.sdpcompose.sdp
 import kotlinx.coroutines.launch
@@ -60,7 +60,6 @@ fun DetailScreen(
     navController: NavController,
     articleEntity: ArticleEntity,
     viewModel: NewsFeedViewModel = hiltViewModel(),
-    articlesViewModel: ArticlesViewModel = hiltViewModel(),
 ) {
     val uiStates by viewModel.uiStates.collectAsState()
 
@@ -69,7 +68,7 @@ fun DetailScreen(
         viewModel.setArticleEntity(articleEntity)
     }
     if (uiStates.articleEntity != null) {
-        DetailScreenContent(uiStates.articleEntity!!, navController, viewModel, articlesViewModel)
+        DetailScreenContent(uiStates.articleEntity!!, navController, viewModel)
     }
 
 
@@ -80,7 +79,6 @@ fun DetailScreenContent(
     articleEntity: ArticleEntity,
     navController: NavController,
     viewModel: NewsFeedViewModel,
-    articlesViewModel: ArticlesViewModel
 ) {
     Column(
         modifier = Modifier
@@ -91,7 +89,6 @@ fun DetailScreenContent(
         TitleRow(
             articleEntity = articleEntity,
             viewModel = viewModel,
-            articlesViewModel = articlesViewModel
         )
         Spacer(modifier = Modifier.height(16.sdp))
         AuthorRow(articleEntity = articleEntity)
@@ -128,19 +125,31 @@ fun DetailScreenContent(
 fun TopDetailBox(articleEntity: ArticleEntity, navController: NavController) {
     val context = LocalContext.current
     Box {
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(articleEntity.urlToImage)
-                .crossfade(true)
-                .build(),
-            placeholder = painterResource(R.drawable.placeholder),
-            contentDescription = "ArticleImage",
-            contentScale = ContentScale.FillBounds,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(150.sdp)
-                .clip(RoundedCornerShape(4.sdp))
-        )
+        if (!articleEntity.urlToImage.isNullOrEmpty()) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(articleEntity.urlToImage)
+                    .crossfade(true)
+                    .build(),
+                placeholder = painterResource(R.drawable.placeholder),
+                contentDescription = "ArticleImage",
+                contentScale = ContentScale.FillBounds,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(150.sdp)
+                    .clip(RoundedCornerShape(4.sdp))
+            )
+        } else {
+            Image(
+                painter = painterResource(id = R.drawable.placeholder),
+                contentDescription = "ArticleImage",
+                contentScale = ContentScale.FillBounds,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(16.sdp))
+                    .fillMaxWidth()
+                    .height(200.sdp)
+            )
+        }
 
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -193,7 +202,6 @@ fun TopDetailBox(articleEntity: ArticleEntity, navController: NavController) {
 fun TitleRow(
     articleEntity: ArticleEntity,
     viewModel: NewsFeedViewModel,
-    articlesViewModel: ArticlesViewModel
 ) {
     Row(
         modifier = Modifier.fillMaxWidth()
@@ -246,7 +254,7 @@ fun TitleRow(
                             } else {
                                 articleEntity.isBookMark = false
                                 viewModel.removeBookMark(articleEntity)
-                                articlesViewModel.getBookMarkArticles()
+                                viewModel.getBookMarkArticles()
 
                             }
                         }

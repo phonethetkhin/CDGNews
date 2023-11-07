@@ -26,17 +26,16 @@ import com.ptk.ptk_news.db.entity.ArticleEntity
 import com.ptk.ptk_news.viewmodel.ArticlesViewModel
 import com.ptk.ptk_news.viewmodel.NewsFeedViewModel
 import ir.kaaveh.sdpcompose.sdp
-import kotlinx.coroutines.launch
 
 @Composable
 fun ReactionBar(
-    viewModel: NewsFeedViewModel,
-    articlesViewModel: ArticlesViewModel,
     articleEntity: ArticleEntity,
+    favOnClick: () -> Unit,
+    commentOnClick: () -> Unit,
+    bookMarkOnClick: () -> Unit,
+    shareOnClick: () -> Unit,
 ) {
-    val context = LocalContext.current
 
-    val scope = rememberCoroutineScope()
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -48,10 +47,8 @@ fun ReactionBar(
             tint = if (articleEntity.isFav) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimary,
             cd = "FavIcon"
         ) {
-            scope.launch {
-                articleEntity.isFav = !articleEntity.isFav
-                viewModel.updateIsFav(articleEntity)
-            }
+
+            favOnClick.invoke()
         }
 
         CustomIcon(
@@ -59,8 +56,7 @@ fun ReactionBar(
             MaterialTheme.colorScheme.onPrimary,
             cd = "CommentIcon"
         ) {
-            viewModel.toggleCommentBoxDialog(true, articleEntity.id)
-
+            commentOnClick.invoke()
         }
 
 
@@ -69,17 +65,8 @@ fun ReactionBar(
             tint = if (articleEntity.isBookMark) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimary,
             cd = "BookMarkIcon"
         ) {
-            scope.launch {
-                if (!articleEntity.isBookMark) {
-                    articleEntity.isBookMark = true
-                    viewModel.insertBookMark(articleEntity)
-                } else {
-                    articleEntity.isBookMark = false
-                    viewModel.removeBookMark(articleEntity)
-                    articlesViewModel.getBookMarkArticles()
 
-                }
-            }
+            bookMarkOnClick.invoke()
         }
 
         CustomIcon(
@@ -87,13 +74,8 @@ fun ReactionBar(
             tint = MaterialTheme.colorScheme.onPrimary,
             cd = "ShareIcon"
         ) {
-            val sendIntent: Intent = Intent().apply {
-                action = Intent.ACTION_SEND
-                putExtra(Intent.EXTRA_TEXT, "${articleEntity.url}")
-                type = "text/plain"
-            }
-            val shareIntent = Intent.createChooser(sendIntent, null)
-            context.startActivity(shareIntent)
+            shareOnClick.invoke()
+
         }
     }
 }

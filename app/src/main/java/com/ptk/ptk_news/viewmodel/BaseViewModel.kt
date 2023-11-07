@@ -256,6 +256,9 @@ open class BaseViewModel @Inject constructor(
                 _uiStates.value.availableSources.filter { it.selected }.map { it.id }
                     .joinToString(",")
 
+            Log.e("testSavePreferredSetting", categoryId.toString())
+            Log.e("testSavePreferredSetting", countryId.toString())
+            Log.e("testSavePreferredSetting", sources.toString())
             dataStore.savePreferredCategoryId(categoryId)
             dataStore.savePreferredCountryId(countryId)
             dataStore.savePreferredSources(sources)
@@ -299,6 +302,11 @@ open class BaseViewModel @Inject constructor(
             _uiStates.update { it.copy(recompose = !_uiStates.value.recompose) }
             context.showToast("Saved to Bookmarks")
         }
+    }
+
+    suspend fun getBookMarkArticles() {
+        val bookMarkArticles = repository.getBookMarkArticleDB()
+        _uiStates.update { it.copy(bookMarkArticles = bookMarkArticles.toCollection(ArrayList())) }
     }
 
     suspend fun removeBookMark(articleEntity: ArticleEntity) {

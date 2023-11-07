@@ -22,11 +22,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import com.ptk.ptk_news.ui.ui_states.ArticleUIStates
-import com.ptk.ptk_news.viewmodel.NewsFeedViewModel
 import ir.kaaveh.sdpcompose.sdp
 
 @Composable
-fun CategorySelectionRow(uiStates: ArticleUIStates, viewModel: NewsFeedViewModel) {
+fun CategorySelectionRow(uiStates: ArticleUIStates, toggleSelectedCategory: (Int) -> Unit) {
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(7.sdp),
     ) {
@@ -47,7 +46,7 @@ fun CategorySelectionRow(uiStates: ArticleUIStates, viewModel: NewsFeedViewModel
                     shape = CircleShape
                 )
                 .clickable {
-                    viewModel.toggleSelectedCategory(category.id)
+                    toggleSelectedCategory.invoke(category.id)
                 }
                 .padding(8.sdp)
             ) {

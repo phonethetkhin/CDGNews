@@ -2,6 +2,8 @@
 
 package com.ptk.ptk_news.ui.screen
 
+import android.content.Intent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -13,6 +15,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -56,7 +59,6 @@ import com.ptk.ptk_news.ui.ui_resource.navigation.Routes
 import com.ptk.ptk_news.ui.ui_states.ArticleUIStates
 import com.ptk.ptk_news.util.navigate
 import com.ptk.ptk_news.viewmodel.ArticlesViewModel
-import com.ptk.ptk_news.viewmodel.NewsFeedViewModel
 import ir.kaaveh.sdpcompose.sdp
 import ir.kaaveh.sdpcompose.ssp
 import kotlinx.coroutines.CoroutineScope
@@ -68,7 +70,6 @@ import kotlinx.coroutines.launch
 fun ArticlesScreen(
     navController: NavController,
     articlesViewModel: ArticlesViewModel = hiltViewModel(),
-    newsFeedViewModel: NewsFeedViewModel = hiltViewModel(),
 
     ) {
     val uiStates by articlesViewModel.uiStates.collectAsState()
@@ -84,7 +85,6 @@ fun ArticlesScreen(
         navController,
         uiStates,
         articlesViewModel,
-        newsFeedViewModel,
     )
 
     val scope = rememberCoroutineScope()
@@ -92,7 +92,6 @@ fun ArticlesScreen(
     FilterSourceDialog(
         showDialog = uiStates.isShowFilterDialog,
         uiStates,
-        newsFeedViewModel,
         articlesViewModel,
         onDismissRequest = {
             articlesViewModel.resetSelectedValueForArticle()
@@ -117,13 +116,14 @@ fun ArticlesScreen(
 
     CommentBoxDialog(
         showDialog = uiStates.showCommentDialog,
-        newsFeedViewModel,
-        uiStates,
-        onDismissRequest = { newsFeedViewModel.toggleCommentBoxDialog(false, 0) })
+        uiStates = uiStates,
+        toggleCommentText = { articlesViewModel.toggleCommentText(it) },
+        onPostComment = { articlesViewModel.postComment() },
+        onDismissRequest = { articlesViewModel.toggleCommentBoxDialog(false, 0) })
 
     NoConnectionDialog(
         showDialog = uiStates.isShowDisconnectedDialog,
-        onDismissRequest = { newsFeedViewModel.toggleIsShowDCDialog(false) })
+        onDismissRequest = { articlesViewModel.toggleIsShowDCDialog(false) })
 }
 
 @Composable
@@ -131,7 +131,6 @@ fun ArticlesScreenContent(
     navController: NavController,
     uiStates: ArticleUIStates,
     viewModel: ArticlesViewModel,
-    newsFeedViewModel: NewsFeedViewModel,
 ) {
     val scope = rememberCoroutineScope()
     Column(
@@ -191,7 +190,6 @@ fun ArticlesScreenContent(
                 navController,
                 uiStates.articlesList,
                 viewModel,
-                newsFeedViewModel
             )
         }
     }
@@ -264,7 +262,7 @@ fun CustomSortByBox(color: Color, text: String, textColor: Color, onclick: () ->
     ) {
         Text(
             text = text,
-            fontSize = MaterialTheme.typography.labelSmall.fontSize,
+            fontSize = 12.ssp,
             color = textColor
         )
     }
@@ -275,7 +273,6 @@ fun ColumnScope.ArticleList(
     navController: NavController,
     articleList: List<ArticleEntity>,
     articlesViewModel: ArticlesViewModel,
-    newsFeedViewModel: NewsFeedViewModel,
 ) {
     LazyColumn(
         modifier = Modifier
@@ -286,8 +283,7 @@ fun ColumnScope.ArticleList(
             ArticleListItem(
                 navController,
                 it,
-                articlesViewModel,
-                newsFeedViewModel
+                articlesViewModel
             )
         }
     }
@@ -298,7 +294,6 @@ fun ArticleListItem(
     navController: NavController,
     article: ArticleEntity,
     articlesViewModel: ArticlesViewModel,
-    newsFeedViewModel: NewsFeedViewModel,
 ) {
 
     Row(
@@ -314,19 +309,30 @@ fun ArticleListItem(
             }
     ) {
         Spacer(modifier = Modifier.width(8.sdp))
-
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(article.urlToImage)
-                .crossfade(true)
-                .build(),
-            placeholder = painterResource(R.drawable.placeholder),
-            contentDescription = "ArticleImage",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .size(50.sdp)
-                .clip(RoundedCornerShape(4.sdp))
-        )
+        if (!article.urlToImage.isNullOrEmpty()) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(article.urlToImage)
+                    .crossfade(true)
+                    .build(),
+                placeholder = painterResource(R.drawable.placeholder),
+                contentDescription = "ArticleImage",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(50.sdp)
+                    .clip(RoundedCornerShape(4.sdp))
+            )
+        } else {
+            Image(
+                painter = painterResource(id = R.drawable.placeholder),
+                contentDescription = "ArticleImage",
+                contentScale = ContentScale.FillBounds,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(16.sdp))
+                    .fillMaxWidth()
+                    .height(200.sdp)
+            )
+        }
         Spacer(modifier = Modifier.width(8.sdp))
         Text(
             text = article.title ?: "-",
@@ -336,7 +342,42 @@ fun ArticleListItem(
         )
 
     }
-    ReactionBar(viewModel = newsFeedViewModel, articlesViewModel, article)
+    val context = LocalContext.current
+
+    val scope = rememberCoroutineScope()
+    ReactionBar(
+        articleEntity = article,
+        favOnClick = {
+            scope.launch {
+                article.isFav = !article.isFav
+                articlesViewModel.updateIsFav(article)
+            }
+        },
+        commentOnClick = {
+            articlesViewModel.toggleCommentBoxDialog(true, article.id)
+
+        },
+        bookMarkOnClick = {
+            scope.launch {
+                if (!article.isBookMark) {
+                    article.isBookMark = true
+                    articlesViewModel.insertBookMark(article)
+                } else {
+                    article.isBookMark = false
+                    articlesViewModel.removeBookMark(article)
+                    articlesViewModel.getBookMarkArticles()
+                }
+            }
+        },
+        shareOnClick = {
+            val sendIntent: Intent = Intent().apply {
+                action = Intent.ACTION_SEND
+                putExtra(Intent.EXTRA_TEXT, "${article.url}")
+                type = "text/plain"
+            }
+            val shareIntent = Intent.createChooser(sendIntent, null)
+            context.startActivity(shareIntent)
+        })
 
     Divider()
 

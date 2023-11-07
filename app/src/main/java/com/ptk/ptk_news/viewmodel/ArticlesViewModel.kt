@@ -35,10 +35,6 @@ class ArticlesViewModel @Inject constructor(
     }
 
 
-    suspend fun getBookMarkArticles() {
-        val bookMarkArticles = repository.getBookMarkArticleDB()
-        _uiStates.update { it.copy(bookMarkArticles = bookMarkArticles.toCollection(ArrayList())) }
-    }
 
     fun savePreferredSettingForArticle() {
         viewModelScope.launch {

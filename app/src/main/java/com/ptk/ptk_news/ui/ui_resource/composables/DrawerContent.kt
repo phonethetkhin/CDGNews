@@ -136,7 +136,9 @@ fun FilterByCategoryLayout(
         modifier = Modifier.padding(8.sdp)
     )
     Spacer(modifier = Modifier.height(4.sdp))
-    CategorySelectionRow(uiStates = uiStates, viewModel = viewModel)
+    CategorySelectionRow(
+        uiStates = uiStates,
+        toggleSelectedCategory = { viewModel.toggleSelectedCategory(it) })
     Spacer(modifier = Modifier.height(16.sdp))
 
     Divider()

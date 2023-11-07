@@ -30,13 +30,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import com.ptk.ptk_news.ui.ui_resource.theme.Red
 import com.ptk.ptk_news.ui.ui_states.ArticleUIStates
-import com.ptk.ptk_news.viewmodel.NewsFeedViewModel
 import ir.kaaveh.sdpcompose.sdp
 
 @Composable
 fun ProfileDrawerContent(
     uiStates: ArticleUIStates,
-    viewModel: NewsFeedViewModel,
+    toggleSelectedCategory: (Int) -> Unit,
+    toggleSelectedCountry: (String) -> Unit,
+    onValueChangeToggle: (String) -> Unit,
+    onSourceSelectedToggle: (String) -> Unit,
     onDismiss: () -> Unit,
     onSave: () -> Unit,
 ) {
@@ -68,13 +70,17 @@ fun ProfileDrawerContent(
 
 
         PFilterByCategoryLayout(
-            uiStates, viewModel
+            uiStates, toggleSelectedCategory, toggleSelectedCountry
         )
         Spacer(modifier = Modifier.height(16.sdp))
 
         Divider()
-        PFilterBySourceLayout(uiStates = uiStates, viewModel = viewModel)
-
+        PFilterBySourceLayout(
+            uiStates,
+            onValueChangeToggle =
+            onValueChangeToggle::invoke,
+            onSourceSelectedToggle = onSourceSelectedToggle::invoke
+        )
         MyButton(
             text = "Save", textColor = Color.White, buttonColor = ButtonDefaults.buttonColors(
                 MaterialTheme.colorScheme.primary
@@ -93,7 +99,8 @@ fun ProfileDrawerContent(
 @Composable
 fun PFilterByCategoryLayout(
     uiStates: ArticleUIStates,
-    viewModel: NewsFeedViewModel,
+    toggleSelectedCategory: (Int) -> Unit,
+    toggleSelectedCountry: (String) -> Unit,
 ) {
     Text(
         text = "Preferred Category",
@@ -103,7 +110,7 @@ fun PFilterByCategoryLayout(
         modifier = Modifier.padding(8.sdp)
     )
     Spacer(modifier = Modifier.height(4.sdp))
-    CategorySelectionRow(uiStates, viewModel)
+    CategorySelectionRow(uiStates) { toggleSelectedCategory.invoke(it) }
     Spacer(modifier = Modifier.height(16.sdp))
 
     Divider()
@@ -121,7 +128,7 @@ fun PFilterByCategoryLayout(
         placeholder = "Please Select Country",
         selectedText = uiStates.selectedCountry,
         items = uiStates.availableCountries.map { it.name },
-        onItemSelected = viewModel::toggleSelectedCountry,
+        onItemSelected = toggleSelectedCountry::invoke,
         modifier = Modifier.fillMaxWidth()
     )
     Spacer(modifier = Modifier.height(16.sdp))
@@ -133,7 +140,8 @@ fun PFilterByCategoryLayout(
 @Composable
 fun PFilterBySourceLayout(
     uiStates: ArticleUIStates,
-    viewModel: NewsFeedViewModel,
+    onValueChangeToggle: (String) -> Unit,
+    onSourceSelectedToggle: (String) -> Unit,
 ) {
     Text(
         text = "Preferred Source",
@@ -144,12 +152,12 @@ fun PFilterBySourceLayout(
     )
     Spacer(modifier = Modifier.height(4.sdp))
 
-    SourceSelectionRow(uiStates = uiStates) { viewModel.toggleSelectedSources(it) }
+    SourceSelectionRow(uiStates = uiStates) { onSourceSelectedToggle.invoke(it) }
 
     Spacer(modifier = Modifier.height(8.sdp))
 
     OutlinedTextField(
-        onValueChange = viewModel::toggleSource,
+        onValueChange = onValueChangeToggle::invoke,
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 16.sdp, start = 16.sdp, end = 16.sdp)
@@ -157,7 +165,7 @@ fun PFilterBySourceLayout(
             .border(1.sdp, color = MaterialTheme.colorScheme.primary),
         value = uiStates.source,
     )
-    SourceSuggestionList(uiStates = uiStates) { viewModel.toggleSelectedSources(it) }
+    SourceSuggestionList(uiStates = uiStates) { onSourceSelectedToggle.invoke(it) }
 
     Spacer(modifier = Modifier.height(16.sdp))
 

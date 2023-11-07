@@ -1,6 +1,8 @@
 package com.ptk.ptk_news.ui.screen
 
 import android.annotation.SuppressLint
+import android.content.Intent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -45,9 +47,9 @@ import com.ptk.ptk_news.ui.ui_resource.navigation.Routes
 import com.ptk.ptk_news.ui.ui_resource.theme.Red
 import com.ptk.ptk_news.util.navigate
 import com.ptk.ptk_news.viewmodel.ArticlesViewModel
-import com.ptk.ptk_news.viewmodel.NewsFeedViewModel
 import ir.kaaveh.sdpcompose.sdp
 import ir.kaaveh.sdpcompose.ssp
+import kotlinx.coroutines.launch
 
 
 //UIs
@@ -56,11 +58,9 @@ import ir.kaaveh.sdpcompose.ssp
 fun BookMarkScreen(
     navController: NavController,
     articlesViewModel: ArticlesViewModel = hiltViewModel(),
-    newsFeedViewModel: NewsFeedViewModel = hiltViewModel(),
 
     ) {
     val uiStates by articlesViewModel.uiStates.collectAsState()
-    val newsFeedUIStates by newsFeedViewModel.uiStates.collectAsState()
 
 
     LaunchedEffect(key1 = Unit) {
@@ -86,7 +86,6 @@ fun BookMarkScreen(
             uiStates.bookMarkArticles,
             navController,
             articlesViewModel,
-            newsFeedViewModel,
         )
 
 
@@ -101,11 +100,13 @@ fun BookMarkScreen(
         }
     }
 
+
     CommentBoxDialog(
-        showDialog = newsFeedUIStates.showCommentDialog,
-        newsFeedViewModel,
-        newsFeedUIStates,
-        onDismissRequest = { newsFeedViewModel.toggleCommentBoxDialog(false, 0) })
+        showDialog = uiStates.showCommentDialog,
+        uiStates = uiStates,
+        toggleCommentText = { articlesViewModel.toggleCommentText(it) },
+        onPostComment = { articlesViewModel.postComment() },
+        onDismissRequest = { articlesViewModel.toggleCommentBoxDialog(false, 0) })
 }
 
 @Composable
@@ -113,7 +114,6 @@ fun BookMarkScreenContent(
     articleList: List<ArticleEntity>,
     navController: NavController,
     articlesViewModel: ArticlesViewModel,
-    newsFeedViewModel: NewsFeedViewModel,
 ) {
     val scope = rememberCoroutineScope()
     Column(
@@ -126,7 +126,6 @@ fun BookMarkScreenContent(
             articleList,
             navController,
             articlesViewModel,
-            newsFeedViewModel
         )
 
     }
@@ -137,7 +136,6 @@ fun ColumnScope.BookMarkArticlesList(
     articleList: List<ArticleEntity>,
     navController: NavController,
     articlesViewModel: ArticlesViewModel,
-    newsFeedViewModel: NewsFeedViewModel,
 ) {
     LazyColumn(
         modifier = Modifier
@@ -149,7 +147,6 @@ fun ColumnScope.BookMarkArticlesList(
                 it,
                 navController,
                 articlesViewModel,
-                newsFeedViewModel,
             )
 
         }
@@ -161,7 +158,6 @@ fun BookMarkArticleItem(
     article: ArticleEntity,
     navController: NavController,
     articlesViewModel: ArticlesViewModel,
-    newsFeedViewModel: NewsFeedViewModel,
 ) {
     Spacer(modifier = Modifier.height(16.sdp))
 
@@ -176,19 +172,31 @@ fun BookMarkArticleItem(
                 )
             }
     ) {
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(article.urlToImage)
-                .crossfade(true)
-                .build(),
-            placeholder = painterResource(R.drawable.placeholder),
-            contentDescription = "ArticleImage",
-            contentScale = ContentScale.FillBounds,
-            modifier = Modifier
-                .clip(RoundedCornerShape(16.sdp))
-                .fillMaxWidth()
-                .height(200.sdp)
-        )
+        if (!article.urlToImage.isNullOrEmpty()) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(article.urlToImage)
+                    .crossfade(true)
+                    .build(),
+                placeholder = painterResource(R.drawable.placeholder),
+                contentDescription = "ArticleImage",
+                contentScale = ContentScale.FillBounds,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(16.sdp))
+                    .fillMaxWidth()
+                    .height(200.sdp)
+            )
+        } else {
+            Image(
+                painter = painterResource(id = R.drawable.placeholder),
+                contentDescription = "ArticleImage",
+                contentScale = ContentScale.FillBounds,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(16.sdp))
+                    .fillMaxWidth()
+                    .height(200.sdp)
+            )
+        }
 
         Surface(
             modifier = Modifier.align(Alignment.BottomStart),
@@ -204,7 +212,42 @@ fun BookMarkArticleItem(
         }
 
     }
-    ReactionBar(viewModel = newsFeedViewModel, articlesViewModel, article)
+    val context = LocalContext.current
+
+    val scope = rememberCoroutineScope()
+    ReactionBar(
+        articleEntity = article,
+        favOnClick = {
+            scope.launch {
+                article.isFav = !article.isFav
+                articlesViewModel.updateIsFav(article)
+            }
+        },
+        commentOnClick = {
+            articlesViewModel.toggleCommentBoxDialog(true, article.id)
+
+        },
+        bookMarkOnClick = {
+            scope.launch {
+                if (!article.isBookMark) {
+                    article.isBookMark = true
+                    articlesViewModel.insertBookMark(article)
+                } else {
+                    article.isBookMark = false
+                    articlesViewModel.removeBookMark(article)
+                    articlesViewModel.getBookMarkArticles()
+                }
+            }
+        },
+        shareOnClick = {
+            val sendIntent: Intent = Intent().apply {
+                action = Intent.ACTION_SEND
+                putExtra(Intent.EXTRA_TEXT, "${article.url}")
+                type = "text/plain"
+            }
+            val shareIntent = Intent.createChooser(sendIntent, null)
+            context.startActivity(shareIntent)
+        })
     Spacer(modifier = Modifier.height(16.sdp))
     Divider()
 }

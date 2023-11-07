@@ -57,7 +57,6 @@ import com.ptk.ptk_news.ui.ui_resource.theme.Yellow
 import com.ptk.ptk_news.ui.ui_states.ArticleUIStates
 import com.ptk.ptk_news.ui.ui_states.ProfileUIStates
 import com.ptk.ptk_news.util.getComponentActivity
-import com.ptk.ptk_news.viewmodel.NewsFeedViewModel
 import com.ptk.ptk_news.viewmodel.ProfileViewModel
 import ir.kaaveh.sdpcompose.sdp
 import kotlinx.coroutines.launch
@@ -69,9 +68,8 @@ import kotlinx.coroutines.launch
 fun ProfileScreen(
     navController: NavController,
     profileViewModel: ProfileViewModel = hiltViewModel(),
-    newsFeedViewModel: NewsFeedViewModel = hiltViewModel(),
 ) {
-    val uiStates by newsFeedViewModel.uiStates.collectAsState()
+    val uiStates by profileViewModel.uiStates.collectAsState()
     val profileUIStates by profileViewModel.profileUIStates.collectAsState()
 
     val context = LocalContext.current
@@ -84,7 +82,7 @@ fun ProfileScreen(
         val themeId = profileViewModel.getThemeId() ?: 1
         profileViewModel.toggleThemeId(themeId)
 
-        newsFeedViewModel.getAllSources()
+        profileViewModel.getAllSources()
 
 
         val textSizeId = profileViewModel.getTextSizeId() ?: 2
@@ -99,7 +97,7 @@ fun ProfileScreen(
 
 
     if (drawerState.isClosed) {
-        newsFeedViewModel.resetSelectedValue()
+        profileViewModel.resetSelectedValue()
     }
 
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
@@ -115,14 +113,21 @@ fun ProfileScreen(
                             )
                     ) {
 
+
                         ProfileDrawerContent(
-                            uiStates, newsFeedViewModel, onDismiss = {
+                            uiStates = uiStates, toggleSelectedCategory = {
+                                profileViewModel.toggleSelectedCategory(it)
+                            },
+                            toggleSelectedCountry = { profileViewModel.toggleSelectedCountry(it) },
+                            onValueChangeToggle = { profileViewModel.toggleSource(it) },
+                            onSourceSelectedToggle = { profileViewModel.toggleSelectedSources(it) },
+                            onDismiss = {
                                 if (drawerState.isOpen) {
                                     coroutineScope.launch {
                                         drawerState.close()
                                     }
                                 }
-                                newsFeedViewModel.resetSelectedValue()
+                                profileViewModel.resetSelectedValue()
 
                             }
                         ) {

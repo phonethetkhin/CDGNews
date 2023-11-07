@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Card
@@ -28,13 +30,13 @@ import ir.kaaveh.sdpcompose.sdp
 fun FilterSourceDialog(
     showDialog: Boolean,
     uiStates: ArticleUIStates,
-    viewModel: NewsFeedViewModel,
     articlesViewModel: ArticlesViewModel,
     onDismissRequest: () -> Unit,
     onSave: () -> Unit
 ) {
     if (showDialog) {
         Dialog(
+
             onDismissRequest = { onDismissRequest.invoke() },
         ) {
 
@@ -48,6 +50,7 @@ fun FilterSourceDialog(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(16.sdp)
+                        .verticalScroll(rememberScrollState())
                 ) {
 
                     Icon(
@@ -66,10 +69,15 @@ fun FilterSourceDialog(
                             }
                     )
 
-                    FilterBySourceLayout(uiStates = uiStates, onValueChangeToggle = {articlesViewModel.toggleSource(it)}, onSourceSelectedToggle = {
-                        articlesViewModel.toggleSelectedSources(it)
+                    FilterBySourceLayout(
+                        uiStates = uiStates,
+                        onValueChangeToggle = { articlesViewModel.toggleSource(it) },
+                        onSourceSelectedToggle = {
+                            articlesViewModel.toggleSelectedSources(it)
 
-                    }, onSave)
+                        },
+                        onSave
+                    )
                 }
             }
         }

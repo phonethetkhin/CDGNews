@@ -38,14 +38,14 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.ptk.ptk_news.ui.ui_resource.theme.Red
 import com.ptk.ptk_news.ui.ui_states.ArticleUIStates
-import com.ptk.ptk_news.viewmodel.NewsFeedViewModel
 import ir.kaaveh.sdpcompose.sdp
 
 @Composable
 fun CommentBoxDialog(
     showDialog: Boolean,
-    newsFeedViewModel: NewsFeedViewModel,
     uiStates: ArticleUIStates,
+    toggleCommentText: (String) -> Unit,
+    onPostComment: () -> Unit,
     onDismissRequest: () -> Unit,
 ) {
     if (showDialog) {
@@ -86,7 +86,7 @@ fun CommentBoxDialog(
                     )
                     Spacer(modifier = Modifier.height(16.sdp))
                     CommentList(uiStates = uiStates)
-                    BottomBar(newsFeedViewModel, uiStates)
+                    BottomBar(toggleCommentText,onPostComment, uiStates)
 
                     Spacer(modifier = Modifier.imePadding())
 
@@ -184,14 +184,17 @@ fun CommentListItem(commentItem: String) {
 }
 
 @Composable
-fun ColumnScope.BottomBar(newsFeedViewModel: NewsFeedViewModel, uiStates: ArticleUIStates) {
+fun ColumnScope.BottomBar(
+    toggleCommentText: (String) -> Unit,
+    onPostComment: () -> Unit, uiStates: ArticleUIStates
+) {
 
     CommentUserInput(
         uiStates.commentText,
         "Please enter public comment",
         modifier = Modifier
             .fillMaxWidth(),
-        onValueChange = newsFeedViewModel::toggleCommentText
+        onValueChange = toggleCommentText::invoke
     )
     Spacer(modifier = Modifier.height(8.sdp))
     Icon(
@@ -201,7 +204,7 @@ fun ColumnScope.BottomBar(newsFeedViewModel: NewsFeedViewModel, uiStates: Articl
         modifier = Modifier
             .align(Alignment.End)
             .clickable {
-                newsFeedViewModel.postComment()
+                onPostComment.invoke()
             }
             .padding(8.sdp)
     )

@@ -6,7 +6,9 @@ import com.ptk.ptk_news.model.ui_model.CountryModel
 object Constants {
     const val BASE_URL = "https://newsapi.org/"
 //    const val API_KEY = "00e93666295040cd91bf645774a191f3"
-    const val API_KEY = "f79e1eac22994912a3a0ef3453477863"
+//    const val API_KEY = "e6efa7af141a41238111e8a74f730a0c"
+//    const val API_KEY = "f79e1eac22994912a3a0ef3453477863"
+    const val API_KEY = "c24f80d4e23b40bcba1c127d91102039"
 
 }
 
