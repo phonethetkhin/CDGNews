@@ -19,6 +19,7 @@ class MyDataStore @Inject constructor(private val application: Application) {
     companion object {
         private val Context.dataStore: DataStore<Preferences> by preferencesDataStore("imsDataStore")
         val IS_FIRST_LAUNCH = booleanPreferencesKey("isFirstLaunch")
+        val USER_NAME = stringPreferencesKey("userName")
         val THEME_ID = intPreferencesKey("themeId")
         val TEXT_SIZE_ID = intPreferencesKey("textSizeId")
         val PREFERRED_CATEGORY_ID = intPreferencesKey("preferredCategoryId")
@@ -26,6 +27,19 @@ class MyDataStore @Inject constructor(private val application: Application) {
         val PREFERRED_SOURCES = stringPreferencesKey("preferredSources")
 
     }
+
+
+    val userName: Flow<String?> = application.dataStore.data
+        .map { preferences ->
+            preferences[USER_NAME] ?: ""
+        }
+
+    suspend fun saveUserName(userName: String) {
+        application.dataStore.edit { preferences ->
+            preferences[USER_NAME] = userName
+        }
+    }
+
 
     val isFirstLaunch: Flow<Boolean?> = application.dataStore.data
         .map { preferences ->

@@ -144,7 +144,10 @@ fun MainComposable() {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
-            if (currentRoute?.route != null && currentRoute.route != Routes.SplashScreen.route) {
+            if (currentRoute?.route != null &&
+                currentRoute.route != Routes.SplashScreen.route &&
+                currentRoute.route != Routes.LandingScreen.route
+            ) {
                 NavigationBar(
                     containerColor = MaterialTheme.colorScheme.primary,
                 ) {

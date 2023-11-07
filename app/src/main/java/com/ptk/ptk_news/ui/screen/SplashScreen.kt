@@ -2,9 +2,11 @@ package com.ptk.ptk_news.ui.screen
 
 import android.content.Context
 import android.net.ConnectivityManager
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -15,15 +17,18 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.ptk.ptk_news.MainActivity
+import com.ptk.ptk_news.R
 import com.ptk.ptk_news.ui.ui_resource.composables.NoConnectionDialog
 import com.ptk.ptk_news.ui.ui_resource.navigation.Routes
 import com.ptk.ptk_news.util.datastore.MyDataStore
 import com.ptk.ptk_news.util.getComponentActivity
 import com.ptk.ptk_news.viewmodel.HomeViewModel
 import com.ptk.ptk_news.viewmodel.NewsFeedViewModel
+import ir.kaaveh.sdpcompose.sdp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -69,6 +74,11 @@ fun SplashScreenContent() {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Image(
+            painter = painterResource(id = R.drawable.cdg_logos_foreground),
+            contentDescription = "CDGLogo", modifier = Modifier.size(150.sdp)
+        )
+
         CircularProgressIndicator(color = MaterialTheme.colorScheme.secondary)
 
     }
@@ -99,7 +109,6 @@ suspend fun checkConnRoute(
                     }
                 }
             }
-            dataStore.saveIsFirstLaunch(false)
         } else {
             newsFeedViewModel.toggleIsShowDCDialog(true)
         }

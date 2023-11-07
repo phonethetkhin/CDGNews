@@ -81,6 +81,9 @@ fun ProfileScreen(
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
+        val userName = profileViewModel.getUserName() ?: ""
+        profileViewModel.toggleName(userName)
+
         val themeId = profileViewModel.getThemeId() ?: 1
         profileViewModel.toggleThemeId(themeId)
 
@@ -177,8 +180,12 @@ fun ProfileScreenContent(
             .fillMaxSize()
 
     ) {
-        Column(modifier = Modifier.weight(1F).verticalScroll(rememberScrollState())) {
-            NameRow()
+        Column(
+            modifier = Modifier
+                .weight(1F)
+                .verticalScroll(rememberScrollState())
+        ) {
+            NameRow(profileUIStates)
             Divider(modifier = Modifier.fillMaxWidth())
             Text(
                 "Theme Color",
@@ -221,7 +228,7 @@ fun ProfileScreenContent(
 }
 
 @Composable
-fun NameRow() {
+fun NameRow(uiStates: ProfileUIStates) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -229,6 +236,7 @@ fun NameRow() {
         verticalAlignment = Alignment.CenterVertically
     ) {
         val color = MaterialTheme.colorScheme.primary
+        val userNameFirstId = if (uiStates.userName.isNotEmpty()) uiStates.userName.first().toString() else "-"
         Text(
             modifier = Modifier
                 .padding(16.sdp)
@@ -238,13 +246,13 @@ fun NameRow() {
                         radius = this.size.maxDimension
                     )
                 },
-            text = "P",
+            text = userNameFirstId,
             color = Color.White,
             fontSize = MaterialTheme.typography.bodyLarge.fontSize
         )
         Spacer(modifier = Modifier.width(8.sdp))
         Text(
-            text = "Phone Thet Khine",
+            text = uiStates.userName,
             fontSize = MaterialTheme.typography.titleLarge.fontSize,
             color = Color.Black
         )
@@ -397,7 +405,8 @@ fun TextSizeListItem(
             imageVector = Icons.Filled.CheckCircle,
             contentDescription = "CheckIcon",
             modifier = Modifier
-                .size(25.sdp).alpha(alpha),
+                .size(25.sdp)
+                .alpha(alpha),
             tint = Color.White
         )
 

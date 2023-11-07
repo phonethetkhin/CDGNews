@@ -26,12 +26,19 @@ class ProfileViewModel @Inject constructor(
 
     //=======================================states function======================================//
 
+    suspend fun getUserName() = dataStore.userName.first()
     suspend fun getThemeId() = dataStore.themeId.first()
     suspend fun getTextSizeId() = dataStore.textSizeId.first()
     fun toggleThemeId(themeId: Int) {
         viewModelScope.launch {
             _profileUIStates.update { it.copy(themeId = themeId) }
             dataStore.saveThemeId(themeId)
+        }
+    }
+
+    fun toggleName(name: String) {
+        viewModelScope.launch {
+            _profileUIStates.update { it.copy(userName = name) }
         }
     }
 
