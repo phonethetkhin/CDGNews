@@ -1,4 +1,4 @@
-# PTKNews
+# CDGNews
 [![splah.png](https://i.postimg.cc/13F6CCtZ/splah.png)](https://postimg.cc/NKg5LxmN)
 
 [![landing.png](https://i.postimg.cc/GtshLf6L/landing.png)](https://postimg.cc/CnSVJcFX)
